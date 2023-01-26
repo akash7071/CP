@@ -35,8 +35,17 @@
  *
  *
  *
- * Student edit: Add your name and email address here:
- * @student    Awesome Student, Awesome.Student@Colorado.edu
+ *
+ * @student    Akash Patil, Akash.Patil@Colorado.edu
+ *
+ * @edit        Added application code for LED blinking in different modes
+ * @date        Jan 25th 2023
+ * @institution University of Colorado Boulder (UCB)
+ * @course      ECEN 5823-001: IoT Embedded Firmware (Spring 2023)
+ * @instructor  David Sluiter
+ * @assignment ecen5823-assignment1-SimplicityStudio
+ * @due        Jan 25th, 2023
+ * @resources  Utilized Silicon Labs' libraries to implement functionality.
  *
  *
  *
@@ -159,7 +168,7 @@ SL_WEAK void app_init(void)
   // This is called once during start-up.
   // Don't call any Bluetooth API functions until after the boot event.
 
-  // Student Edit: Add a call to gpioInit() here
+    gpioInit();  //Initializing GPIO
 
 } // app_init()
 
@@ -197,13 +206,44 @@ SL_WEAK void app_process_action(void)
   //         We will create/use a scheme that is far more energy efficient in
   //         later assignments.
 
-  delayApprox(3500000);
+//Q1 and Q2
+  {
 
-  gpioLed0SetOn();
+       delayApprox(3500000);    //call delay of 1s
+       gpioLed0SetOn();         //set LED0 to on state
 
-  delayApprox(3500000);
 
-  gpioLed0SetOff();
+
+   }
+
+//Q4                            //LED0 flashing with 50% duty cycle
+//  {
+//      delayApprox(3500000);   //delay of 1s
+//
+//      gpioLed0SetOn();        //set LED0 to on state
+//
+//      delayApprox(3500000);   //delay of 1s
+//
+//      gpioLed0SetOff();       //set LED0 to off state
+//
+//    }
+
+
+
+//Q5                             //LED0 and LED1 flashing with 50% duty cycle
+//  {
+//    delayApprox(3500000);      //delay of 1s
+//
+//    gpioLed0SetOn();           //LED0 on
+//    gpioLed1SetOn();           //LED1 on
+//
+//    delayApprox(3500000);     //delay of 1s
+//
+//    gpioLed0SetOff();         //LED0 off
+//    gpioLed1SetOff();         //LED1 off
+//  }
+
+
 
 } // app_process_action()
 

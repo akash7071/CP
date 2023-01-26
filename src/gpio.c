@@ -9,8 +9,17 @@
    Dave Sluiter: Use this file to define functions that set up or control GPIOs.
 
  *
- * Student edit: Add your name and email address here:
- * @student    Awesome Student, Awesome.Student@Colorado.edu
+ *
+ * @student    Akash Patil, Akash.Patil@Colorado.edu
+ *
+ * @edit       Added port and pin numbers for LED0 and LED1
+ * @date      Jan 25th 2023
+ * @institution University of Colorado Boulder (UCB)
+ * @course      ECEN 5823-001: IoT Embedded Firmware (Spring 2023)
+ * @instructor  David Sluiter
+ * @assignment ecen5823-assignment1-SimplicityStudio
+ * @due        Jan 25th, 2023
+ * @resources  Utilized Silicon Labs' libraries to implement functionality.
  *
  
  */
@@ -34,10 +43,10 @@
 // and GPIO documentation at https://siliconlabs.github.io/Gecko_SDK_Doc/efm32g/html/group__GPIO.html
 // to determine the correct values for these.
 
-#define LED0_port  0 // change to correct ports and pins
-#define LED0_pin   0
-#define LED1_port  0
-#define LED1_pin   0
+#define LED0_port  5 // change to correct ports and pins
+#define LED0_pin   4
+#define LED1_port  5
+#define LED1_pin   5
 
 
 
@@ -51,9 +60,9 @@ void gpioInit()
 	//GPIO_DriveStrengthSet(LED0_port, gpioDriveStrengthWeakAlternateWeak);
 	GPIO_PinModeSet(LED0_port, LED0_pin, gpioModePushPull, false);
 
-	GPIO_DriveStrengthSet(LED1_port, gpioDriveStrengthStrongAlternateStrong);
-	//GPIO_DriveStrengthSet(LED1_port, gpioDriveStrengthWeakAlternateWeak);
-	GPIO_PinModeSet(LED1_port, LED1_pin, gpioModePushPull, false);
+//  GPIO_DriveStrengthSet(LED1_port, gpioDriveStrengthStrongAlternateStrong);
+//	GPIO_DriveStrengthSet(LED1_port, gpioDriveStrengthWeakAlternateWeak);
+//	GPIO_PinModeSet(LED1_port, LED1_pin, gpioModePushPull, false);
 
 
 

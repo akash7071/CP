@@ -13,6 +13,17 @@
  * Editor: Feb 26, 2022, Dave Sluiter
  * Change: Added comment about use of .h files.
  *
+ * @student    Akash Patil, Akash.Patil@Colorado.edu
+ *
+ *
+ * @date      Jan 25th 2023
+ * @institution University of Colorado Boulder (UCB)
+ * @course      ECEN 5823-001: IoT Embedded Firmware (Spring 2023)
+ * @instructor  David Sluiter
+ * @assignment ecen5823-assignment1-SimplicityStudio
+ * @due        Jan 25th, 2023
+ * @resources  Utilized Silicon Labs' libraries to implement functionality.
+ *
  */
 
 // Students: Remember, a header file (a .h file) generally defines an interface
