@@ -2,14 +2,18 @@ Please include your answers to the questions below with your submission, enterin
 See [Mastering Markdown](https://guides.github.com/features/mastering-markdown/) for github markdown formatting if desired.
 
 **1. How much current does the system draw (instantaneous measurement) when a single LED is on with the GPIO pin set to StrongAlternateStrong?**
+
    Answer: 5.64 mA
-   A1_Q1.png
+
+   refer A1_Q1.png
    
 
 
 **2. How much current does the system draw (instantaneous measurement) when a single LED is on with the GPIO pin set to WeakAlternateWeak?**
+
    Answer:5.74 mA
-   A1_Q2.png
+
+   refer A1_Q2.png
 
 
 
@@ -24,14 +28,18 @@ referencing the [Mainboard Schematic](https://www.silabs.com/documents/public/sc
 
 
 **4. With the WeakAlternateWeak drive strength setting, what is the average current for 1 complete on-off cycle for 1 LED with an on-off duty cycle of 50% (approximately 1 sec on, 1 sec off)?**
+
    Answer: 5.19 mA
-   A1_Q4.png
+
+   refer A1_Q4.png
 
 
 
 **5. With the WeakAlternateWeak drive strength setting, what is the average current for 1 complete on-off cycle for 2 LEDs (both on at the time same and both off at the same time) with an on-off duty cycle of 50% (approximately 1 sec on, 1 sec off)?**
+
    Answer:5.36 mA
-   A1_Q5.png
+
+   refer A1_Q5.png
 
 
 
