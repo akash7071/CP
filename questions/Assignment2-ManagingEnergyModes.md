@@ -7,10 +7,10 @@ See [Mastering Markdown](https://guides.github.com/features/mastering-markdown/)
 
 Energy Mode | Period (ms) | LED On Time (ms) |Period average current (uA) | Average Current with LED off (uA) | Average Current with LED On (uA)
 ------------| ------------|------------------|----------------------------|-----------------------------------|---------------------------------
-EM0         |    TBD      |       TBD        |          TBD               |           TBD                     |         TBD
-EM1         |    TBD      |       TBD        |          TBD               |           TBD                     |         TBD
-EM2         |    TBD      |       TBD        |          TBD               |           TBD                     |         TBD
-EM3         |    TBD      |       TBD        |          TBD               |           TBD                     |         TBD
+EM0         |    2420     |       178        |          5150              |           5110                    |         5600
+EM1         |    2420     |       174        |          3550              |           3510                    |         4010
+EM2         |    2420     |       174        |          3250              |           3220                    |         3720
+EM3         |    2410     |       177        |          41.6              |           4.32                    |         506
 
 
 
@@ -56,22 +56,22 @@ LED measurement - Period
 LED measurement - LED on time   
 ![em3_led_ledOnTime][em3_led_ledOnTime]  
 
-[em0_avg_current_period]: screenshots/em0_avg_current_period.jpg "em0_avg_current_period"
-[em0_avg_current_ledoff]: screenshots/em0_avg_current_ledoff.jpg "em0_avg_current_ledoff"
-[em0_avg_current_ledon]: put-your-link-to-screenshot-image-here "em0_avg_current_ledon"
+[em0_avg_current_period]: screenshots/em0_avg_current_period.png "em0_avg_current_period"
+[em0_avg_current_ledoff]: screenshots/em0_avg_current_ledoff.png "em0_avg_current_ledoff"
+[em0_avg_current_ledon]: screenshots/em0_avg_current_ledon.png "em0_avg_current_ledon"
 
-[em1_avg_current_period]: put-your-link-to-screenshot-image-here "em1_avg_current_period"
-[em1_avg_current_ledoff]: put-your-link-to-screenshot-image-here "em1_avg_current_ledoff"
-[em1_avg_current_ledon]: put-your-link-to-screenshot-image-here "em1_avg_current_ledon"
+[em1_avg_current_period]: screenshots/em1_avg_current_period.png "em1_avg_current_period"
+[em1_avg_current_ledoff]: screenshots/em1_avg_current_ledoff.png "em1_avg_current_ledoff"
+[em1_avg_current_ledon]: screenshots/em1_avg_current_ledon.png "em1_avg_current_ledon"
 
-[em2_avg_current_period]: put-your-link-to-screenshot-image-here "em2_avg_current_period"
-[em2_avg_current_ledoff]: put-your-link-to-screenshot-image-here "em2_avg_current_ledoff"
-[em2_avg_current_ledon]: put-your-link-to-screenshot-image-here "em2_avg_current_ledon"
-[em2_led_period]: put-your-link-to-screenshot-image-here "em2_led_period"
-[em2_led_ledOnTime]: put-your-link-to-screenshot-image-here "em2_led_ledOnTime"
+[em2_avg_current_period]: screenshots/em2_avg_current_period.png "em2_avg_current_period"
+[em2_avg_current_ledoff]: screenshots/em2_avg_current_ledoff.png "em2_avg_current_ledoff"
+[em2_avg_current_ledon]:  screenshots/em2_avg_current_ledon.png "em2_avg_current_ledon"
+[em2_led_period]: screenshots/em2_avg_current_period.png "em2_led_period"
+[em2_led_ledOnTime]: screenshots/em2_avg_current_ledon.png "em2_led_ledOnTime"
 
-[em3_avg_current_period]: put-your-link-to-screenshot-image-here "em3_avg_current_period"
-[em3_avg_current_ledoff]: put-your-link-to-screenshot-image-here "em3_avg_current_ledoff"
-[em3_avg_current_ledon]: put-your-link-to-screenshot-image-here "em3_avg_current_ledon"
-[em3_led_period]: put-your-link-to-screenshot-image-here "em3_led_period"
-[em3_led_ledOnTime]: put-your-link-to-screenshot-image-here "em3_led_ledOnTime"
+[em3_avg_current_period]: screenshots/em3_avg_current_period.png "em3_avg_current_period"
+[em3_avg_current_ledoff]: screenshots/em3_avg_current_ledoff.png "em3_avg_current_ledoff"
+[em3_avg_current_ledon]: screenshots/em3_avg_current_ledon.png "em3_avg_current_ledon"
+[em3_led_period]: screenshots/em3_avg_current_period.png "em3_led_period"
+[em3_led_ledOnTime]: screenshots/em3_avg_current_ledon.png "em3_led_ledOnTime"

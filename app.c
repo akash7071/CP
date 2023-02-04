@@ -50,11 +50,13 @@
  *
  *
  ******************************************************************************/
+#include <src/app.h>
 #include "em_common.h"
 #include "app_assert.h"
 #include "sl_bluetooth.h"
 #include "gatt_db.h"
 #include "app.h"
+
 
 
 // *************************************************
@@ -63,12 +65,19 @@
 //           assignment.
 // *************************************************
 
+
+
 #include "sl_status.h"             // for sl_status_print()
+#include "em_gpio.h"
+
 
 #include "src/ble_device_type.h"
 #include "src/gpio.h"
 #include "src/lcd.h"
-
+#include "src/oscillator.h"
+#include "src/timer.h"
+#include "src/irq.h"
+#include "src/log.h"
 
 // Students: Here is an example of how to correctly include logging functions in
 //           each .c file.
@@ -79,7 +88,10 @@
 
 // Include logging specifically for this .c file
 #define INCLUDE_LOG_DEBUG 1
-#include "src/log.h"
+
+uint32_t onTime=0;    //extern variable init
+uint32_t offTime=0;   //extern variable init
+
 
 
 
@@ -103,8 +115,11 @@
 // Students: We'll need to modify this for A2 onward so that compile time we
 //           control what the lowest EM (energy mode) the MCU sleeps to. So
 //           think "#if (expression)".
-#define APP_IS_OK_TO_SLEEP      (false)
-//#define APP_IS_OK_TO_SLEEP      (true)
+#if !LOWEST_ENERGY_MODE
+#define APP_IS_OK_TO_SLEEP      (false)   //for EM0 mode
+#else
+#define APP_IS_OK_TO_SLEEP      (true)    //for EM1, EM2, EM3 modes
+#endif
 
 
 // Return values for app_sleep_on_isr_exit():
@@ -156,6 +171,15 @@ sl_power_manager_on_isr_exit_t app_sleep_on_isr_exit(void)
 
 #endif // defined(SL_CATALOG_POWER_MANAGER_PRESENT)
 
+//static void delayApprox(int delay)
+//{
+//  volatile int i;
+//
+//  for (i = 0; i < delay; ) {
+//      i=i+1;
+//  }
+
+//} // delayApprox()
 
 
 
@@ -168,7 +192,28 @@ SL_WEAK void app_init(void)
   // This is called once during start-up.
   // Don't call any Bluetooth API functions until after the boot event.
 
-    gpioInit();  //Initializing GPIO
+    gpioInit();                     //Initializing GPIO
+    oscillatorInit();               //Initializing Oscillators
+    timerInit();                    //Initializing letimer
+    gpioLed0SetOn();                //start with led on
+
+
+    if(LOWEST_ENERGY_MODE<3)        //for energy modes EM0,EM1,EM2
+    {
+      onTime= (LETIMER_ON_TIME_MS *32768)/(4*1000);                     //computing onTime
+      offTime=((LETIMER_PERIOD_MS-LETIMER_ON_TIME_MS)* 32768)/(4*1000); //computing offTime
+    }
+    else                            //for energy modes EM3
+      {
+        onTime= LETIMER_ON_TIME_MS;                                     //computing onTime
+        offTime=(LETIMER_PERIOD_MS-LETIMER_ON_TIME_MS);                 //computing offTime
+      }
+
+    if(LOWEST_ENERGY_MODE>0 && LOWEST_ENERGY_MODE<3)
+    sl_power_manager_add_em_requirement(LOWEST_ENERGY_MODE);          //adding power requirements for em1 and em2
+
+    NVIC_ClearPendingIRQ (LETIMER0_IRQn); //clear pending interrupts in LETIMER
+    NVIC_EnableIRQ(LETIMER0_IRQn);        //configure NVIC to allow LETIMER interrupt
 
 } // app_init()
 
@@ -181,15 +226,6 @@ SL_WEAK void app_init(void)
  * comment out this function. Wait loops are a bad idea in general.
  * We'll discuss how to do this a better way in the next assignment.
  *****************************************************************************/
-static void delayApprox(int delay)
-{
-  volatile int i;
-
-  for (i = 0; i < delay; ) {
-      i=i+1;
-  }
-
-} // delayApprox()
 
 
 
@@ -200,48 +236,12 @@ static void delayApprox(int delay)
  *****************************************************************************/
 SL_WEAK void app_process_action(void)
 {
-  // Put your application code here for A1 to A4.
+
+//  // Put your application code here for A1 to A4.
   // This is called repeatedly from the main while(1) loop
   // Notice: This function is not passed or has access to Bluetooth stack events.
   //         We will create/use a scheme that is far more energy efficient in
   //         later assignments.
-
-//Q1 and Q2
-  {
-
-       delayApprox(3500000);    //call delay of 1s
-       gpioLed0SetOn();         //set LED0 to on state
-
-
-
-   }
-
-//Q4                            //LED0 flashing with 50% duty cycle
-//  {
-//      delayApprox(3500000);   //delay of 1s
-//
-//      gpioLed0SetOn();        //set LED0 to on state
-//
-//      delayApprox(3500000);   //delay of 1s
-//
-//      gpioLed0SetOff();       //set LED0 to off state
-//
-//    }
-
-
-
-//Q5                             //LED0 and LED1 flashing with 50% duty cycle
-//  {
-//    delayApprox(3500000);      //delay of 1s
-//
-//    gpioLed0SetOn();           //LED0 on
-//    gpioLed1SetOn();           //LED1 on
-//
-//    delayApprox(3500000);     //delay of 1s
-//
-//    gpioLed0SetOff();         //LED0 off
-//    gpioLed1SetOff();         //LED1 off
-//  }
 
 
 
