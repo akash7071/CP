@@ -44,8 +44,9 @@
  * @course      ECEN 5823-001: IoT Embedded Firmware (Spring 2023)
  * @instructor  David Sluiter
  * @assignment ecen5823-assignment1-SimplicityStudio
- * @due        Jan 25th, 2023
- * @resources  Utilized Silicon Labs' libraries to implement functionality.
+ * @due        Feb 10th, 2023
+ * @resources  Utilized Silicon Labs' libraries and examples to implement
+ *              functionality.
  *
  *
  *
