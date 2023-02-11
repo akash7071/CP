@@ -32,8 +32,16 @@
  *
  *
  *
- * Student edit: Add your name and email address here:
- * @student    Awesome Student, Awesome.Student@Colorado.edu
+ *
+ * @student    Akash Patil, Akash.Patil@Colorado.edu
+ * @edit       Energy profiles
+ * @date       Feb 3rd 2023
+ * @institution University of Colorado Boulder (UCB)
+ * @course      ECEN 5823-001: IoT Embedded Firmware (Spring 2023)
+ * @instructor  David Sluiter
+ * @assignment ecen5823-assignment2-ManagingEnergyModes
+ * @resources  Starter code from github classroom, prerecorded lecture.
+ *
  *
  *
  ******************************************************************************/
@@ -45,8 +53,33 @@
 //           functions, i.e. define the function prototypes. #define and type
 //           definitions can be added if the caller requires theses.
 
-#ifndef APP_H
-#define APP_H
+#include "em_common.h"
+
+#ifndef SRC_APP_H_
+#define SRC_APP_H_
+
+#define LOWEST_ENERGY_MODE 3      //change energy mode here
+//#define LETIMER_ON_TIME_MS 175    //change on period here
+#define LETIMER_PERIOD_MS 3000    //change total period here
+
+//extern uint32_t onTime;     //extern variables to calculate onTime value for comp0
+extern uint32_t intTime;    //extern variables to calculate offTime value for comp0
+extern uint16_t eventLog;
+typedef enum
+{
+  READ_TEMP,
+  EVENT_B,
+  EVENT_C,
+  EVENT_D,
+  EVENT_E
+} eventEnum;
+
+extern eventEnum event;
+
+
+
+
+
 
 /**************************************************************************//**
  * Application Init.
@@ -58,4 +91,4 @@ void app_init(void);
  *****************************************************************************/
 void app_process_action(void);
 
-#endif // APP_H
+#endif /* SRC_APP_H_ */

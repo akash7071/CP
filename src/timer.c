@@ -8,9 +8,12 @@
  * @assignment ecen5823-assignment2-ManagingEnergyModes
  * @resources  Starter code from github classroom, prerecorded lecture.
 */
-#include <src/app.h>
+#define INCLUDE_LOG_DEBUG 1
+
+#include <app.h>
 #include "em_letimer.h"
 #include "timer.h"
+#include "src/log.h"
 
 
 
@@ -24,7 +27,7 @@ void timerInit ()
      false,               // enabled later on
      true,                // continue operation during debug
      true,                // load COMP0 into CNT on UF
-     true,                // load COMP1 into COMP0 when REP0==0
+     true,               // load COMP1 into COMP0 when REP0==0
      0,                   // default output pin 1 value
      0,                   // default output pin 2 value
      letimerUFOANone,     // no underflow output
@@ -39,15 +42,16 @@ void timerInit ()
 
 
    // calculate and load COMP0 (top)
-   uint32_t onTime= LETIMER_PERIOD_MS * (2^15)/(4*1000);
-   LETIMER_CompareSet(LETIMER0,0,onTime);                   //first load only
+//   uint32_t intTime= LETIMER_PERIOD_MS * (2^15)/(4*1000);
+   LETIMER_CompareSet(LETIMER0,0,intTime);                   //first load only
 
 
    // Clear all IRQ flags in the LETIMER0 IF
    LETIMER_IntClear (LETIMER0, 0xFFFFFFFF);
 
    // Set UF and COMP1 in LETIMER0_IEN, so that the timer will generate IRQs to the NVIC.
-   tempData = LETIMER_IEN_UF | LETIMER_IEN_COMP1;
+//   tempData = LETIMER_IEN_UF | LETIMER_IEN_COMP1;
+   tempData = LETIMER_IEN_UF ;
 
    LETIMER_IntEnable (LETIMER0, tempData); // Make sure you have defined the ISR routine LETIMER0_IRQHandler()
 
@@ -56,4 +60,31 @@ void timerInit ()
 
 
 }
+
+
+/**************************************************************************//**
+ * Function to create a delay in multiples of 122 us
+ *****************************************************************************/
+
+
+void timerWaitUs(uint32_t us_wait)
+{
+  if(us_wait<122 || us_wait>999424)
+      {
+      LOG_ERROR("wait time out of range");
+      return;
+      }
+
+  uint32_t actual_wait=us_wait/244;
+
+
+    //LOG("Too less time");
+  uint32_t startTime=LETIMER_CounterGet(LETIMER0);
+
+  while((startTime - LETIMER_CounterGet(LETIMER0))<actual_wait)
+     ;
+
+}
+
+
 

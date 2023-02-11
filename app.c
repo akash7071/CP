@@ -50,13 +50,14 @@
  *
  *
  ******************************************************************************/
-#include <src/app.h>
+#include <app.h>
 #include "em_common.h"
 #include "app_assert.h"
 #include "sl_bluetooth.h"
 #include "gatt_db.h"
-#include "app.h"
 
+#define INCLUDE_LOG_DEBUG 1
+#define DELAY_TEST 0
 
 
 // *************************************************
@@ -69,8 +70,6 @@
 
 #include "sl_status.h"             // for sl_status_print()
 #include "em_gpio.h"
-
-
 #include "src/ble_device_type.h"
 #include "src/gpio.h"
 #include "src/lcd.h"
@@ -78,6 +77,8 @@
 #include "src/timer.h"
 #include "src/irq.h"
 #include "src/log.h"
+#include "src/i2c.h"
+#include "src/scheduler.h"
 
 // Students: Here is an example of how to correctly include logging functions in
 //           each .c file.
@@ -87,11 +88,12 @@
 //           to call one of the LOG_***() functions from.
 
 // Include logging specifically for this .c file
-#define INCLUDE_LOG_DEBUG 1
 
-uint32_t onTime=0;    //extern variable init
-uint32_t offTime=0;   //extern variable init
 
+//uint32_t onTime=0;    //extern variable init
+uint32_t intTime=0;   //extern variable init
+uint16_t eventLog=0;
+eventEnum event =EVENT_E;
 
 
 
@@ -171,16 +173,30 @@ sl_power_manager_on_isr_exit_t app_sleep_on_isr_exit(void)
 
 #endif // defined(SL_CATALOG_POWER_MANAGER_PRESENT)
 
-//static void delayApprox(int delay)
-//{
-//  volatile int i;
-//
-//  for (i = 0; i < delay; ) {
-//      i=i+1;
-//  }
 
-//} // delayApprox()
 
+/**************************************************************************//**
+ * Function to enable GPIO SCL and SDA and set sensor enable.
+ *****************************************************************************/
+
+void enableI2CGPIO()
+{
+  GPIO_PinModeSet(gpioPortC, 10, gpioModePushPull, false);
+  GPIO_PinModeSet(gpioPortC, 11, gpioModePushPull, false);
+  GPIO_PinOutSet(gpioPortD,15);
+  i2cInit();
+}
+
+/**************************************************************************//**
+ * Function to disable GPIO SCL and SDA and clear sensor enable.
+ *****************************************************************************/
+void disableI2CGPIO()
+{
+  GPIO_PinModeSet(gpioPortC, 10, gpioModeDisabled, false);
+  GPIO_PinModeSet(gpioPortC, 11, gpioModeDisabled, false);
+  GPIO_PinOutClear(gpioPortD,15);
+
+}
 
 
 /**************************************************************************//**
@@ -192,25 +208,30 @@ SL_WEAK void app_init(void)
   // This is called once during start-up.
   // Don't call any Bluetooth API functions until after the boot event.
 
+
+
+
+#if LOWEST_ENERGY_MODE<3                               //for energy modes EM0,EM1,EM2
+    {
+      intTime=((LETIMER_PERIOD_MS)* 32768)/(8*1000); //computing offTime
+    }
+#else                                                    //for energy modes EM3
+      {
+        intTime=(LETIMER_PERIOD_MS);                 //computing period Time
+      }
+#endif
+
+#if LOWEST_ENERGY_MODE>=0 && LOWEST_ENERGY_MODE<3
+    sl_power_manager_add_em_requirement(LOWEST_ENERGY_MODE);          //adding power requirements for em1 and em2
+#endif
+
+
+
+
     gpioInit();                     //Initializing GPIO
     oscillatorInit();               //Initializing Oscillators
     timerInit();                    //Initializing letimer
-    gpioLed0SetOn();                //start with led on
-
-
-    if(LOWEST_ENERGY_MODE<3)        //for energy modes EM0,EM1,EM2
-    {
-      onTime= (LETIMER_ON_TIME_MS *32768)/(4*1000);                     //computing onTime
-      offTime=((LETIMER_PERIOD_MS-LETIMER_ON_TIME_MS)* 32768)/(4*1000); //computing offTime
-    }
-    else                            //for energy modes EM3
-      {
-        onTime= LETIMER_ON_TIME_MS;                                     //computing onTime
-        offTime=(LETIMER_PERIOD_MS-LETIMER_ON_TIME_MS);                 //computing offTime
-      }
-
-    if(LOWEST_ENERGY_MODE>0 && LOWEST_ENERGY_MODE<3)
-    sl_power_manager_add_em_requirement(LOWEST_ENERGY_MODE);          //adding power requirements for em1 and em2
+    i2cInit();
 
     NVIC_ClearPendingIRQ (LETIMER0_IRQn); //clear pending interrupts in LETIMER
     NVIC_EnableIRQ(LETIMER0_IRQn);        //configure NVIC to allow LETIMER interrupt
@@ -220,14 +241,76 @@ SL_WEAK void app_init(void)
 
 
 
-/*****************************************************************************
- * delayApprox(), private to this file.
- * A value of 3500000 is ~ 1 second. After assignment 1 you can delete or
- * comment out this function. Wait loops are a bad idea in general.
- * We'll discuss how to do this a better way in the next assignment.
+/**************************************************************************//**
+ * Function to execute the control flow to read temperature from the sensor
+ * through I2C
+ *****************************************************************************/
+void read_temp_from_si7021()
+{
+  enableI2CGPIO();            //enable GPIO to the sensor
+  timerWaitUs(80000);          //wait for sensor to boot up
+  startMeasurement();         //send command to start temp measurement on I2C
+  timerWaitUs(11000);          //wait for successful read
+  readMeasurement();          //read temp from buffer
+  disableI2CGPIO();           //disable GPIO  for LPM
+
+
+}
+
+#if DELAY_TEST
+/**************************************************************************//**
+ * Function to unit test the us delay function using LED toggle function
+ * and verifying it with energy profiling
  *****************************************************************************/
 
+void delayTest()
+{
+  timerWaitUs(8);
+  GPIO_PinOutToggle(5,4);
+  timerWaitUs(1);
+  GPIO_PinOutToggle(5,4);
 
+  timerWaitUs(80);
+  GPIO_PinOutToggle(5,4);
+  timerWaitUs(11);
+  GPIO_PinOutToggle(5,4);
+
+  timerWaitUs(800);
+  GPIO_PinOutToggle(5,4);
+  timerWaitUs(110);
+  GPIO_PinOutToggle(5,4);
+
+  timerWaitUs(8000);
+  GPIO_PinOutToggle(5,4);
+  timerWaitUs(1100);
+  GPIO_PinOutToggle(5,4);
+
+  timerWaitUs(80000);
+  GPIO_PinOutToggle(5,4);
+  timerWaitUs(11000);
+  GPIO_PinOutToggle(5,4);
+
+
+  timerWaitUs(800000);
+  GPIO_PinOutToggle(5,4);
+  timerWaitUs(110000);
+  GPIO_PinOutToggle(5,4);
+
+
+  timerWaitUs(8000000);
+  GPIO_PinOutToggle(5,4);
+  timerWaitUs(1100000);
+  GPIO_PinOutToggle(5,4);
+
+
+  timerWaitUs(80000000);
+  GPIO_PinOutToggle(5,4);
+  timerWaitUs(11000000);
+  GPIO_PinOutToggle(5,4);
+
+
+}
+#endif
 
 
 
@@ -237,13 +320,47 @@ SL_WEAK void app_init(void)
 SL_WEAK void app_process_action(void)
 {
 
-//  // Put your application code here for A1 to A4.
+  // Put your application code here for A1 to A4.
   // This is called repeatedly from the main while(1) loop
   // Notice: This function is not passed or has access to Bluetooth stack events.
-  //         We will create/use a scheme that is far more energy efficient in
-  //         later assignments.
+  // We will create/use a scheme that is far more energy efficient in later assignments.
+#if DELAY_TEST
+  delayTest();
+#endif
+  event=getEvent();                 //get event from scheduler
+  switch(event)
 
+  {
 
+  case READ_TEMP:                   //case for reading temperature from sensor
+    {
+      read_temp_from_si7021();
+      event=EVENT_E;                //switch to empty case
+      break;
+    }
+
+  case EVENT_B:                     //reserved for future event
+    {
+     ;
+    }
+  case EVENT_C:                     //reserved for future event
+    {
+     ;
+    }
+  case EVENT_D:                     //reserved for future event
+    {
+     ;
+    }
+  case EVENT_E:                     //reserved for future event
+    {
+     ;
+    }
+  default:
+    {
+      ;
+    }
+
+  }
 
 } // app_process_action()
 

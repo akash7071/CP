@@ -13,6 +13,7 @@
 #define SRC_TIMER_H_
 
 void timerInit();
+void timerWaitUs(uint32_t us_wait);
 
 
 
