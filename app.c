@@ -242,7 +242,7 @@ SL_WEAK void app_init(void)
 
     NVIC_ClearPendingIRQ (LETIMER0_IRQn); //clear pending interrupts in LETIMER
     NVIC_EnableIRQ(LETIMER0_IRQn);        //configure NVIC to allow LETIMER interrupt
-//    timerWaitUs_irq(100000);
+    timerWaitUs_irq(100000);
 
 } // app_init()
 
