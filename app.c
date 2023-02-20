@@ -363,12 +363,12 @@ SL_WEAK void app_process_action(void)
 
               case IDLE:
 
-//                if (event & 2) {
+                if (event & 2) {
                   timerWaitUs_irq(100000);
                   gpioLed0SetOn();
                   nextState=WAIT_FOR_TIMER;
 
-//                }
+                }
                 break;
 
 
