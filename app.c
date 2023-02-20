@@ -239,8 +239,10 @@ SL_WEAK void app_init(void)
     timerInit();                    //Initializing letimer
     i2cInit();
 
+
     NVIC_ClearPendingIRQ (LETIMER0_IRQn); //clear pending interrupts in LETIMER
     NVIC_EnableIRQ(LETIMER0_IRQn);        //configure NVIC to allow LETIMER interrupt
+//    timerWaitUs_irq(100000);
 
 } // app_init()
 
@@ -352,6 +354,37 @@ SL_WEAK void app_process_action(void)
     currentState=nextState;
     event=getEvent();                 //get event from scheduler
 
+    while (1) {
+        currentState=nextState;
+        event=getEvent();
+
+
+            switch(currentState) {
+
+              case IDLE:
+
+//                if (event & 2) {
+                  timerWaitUs_irq(100000);
+                  gpioLed0SetOn();
+                  nextState=WAIT_FOR_TIMER;
+
+//                }
+                break;
+
+
+              case WAIT_FOR_TIMER:
+                if (event & 2) {
+                  timerWaitUs_irq(100000);
+                  gpioLed0SetOff();
+                  nextState=IDLE;
+
+                }
+                break;
+
+
+            } // switch
+
+        } // while (1)
 
       switch(currentState)
       {

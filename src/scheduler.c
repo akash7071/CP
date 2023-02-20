@@ -74,21 +74,22 @@ void setI2CCompleteEvent()
  * Function to read the events log and return an active event through priority
  * and clear the returned event
  *****************************************************************************/
-
+eventEnum lastEvent =IDLE_EVENT;
 
 uint8_t getEvent()
 {
-  if((eventLog & COMP0_EVENT) )
+  if((eventLog & COMP0_EVENT) && (lastEvent!=COMP0_UF))
     {
       CORE_DECLARE_IRQ_STATE;
       CORE_ENTER_CRITICAL();
       eventLog &= ~(1 << (COMP0_EVENT-1));
       CORE_EXIT_CRITICAL();
 //      nextEvent=2;
+      lastEvent=COMP0_UF;
       return COMP0_UF;
     }
 
-  else if((eventLog & COMP1_EVENT) )
+  else if((eventLog & COMP1_EVENT))
     {
        CORE_DECLARE_IRQ_STATE;
        CORE_ENTER_CRITICAL();

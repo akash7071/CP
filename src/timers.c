@@ -28,8 +28,8 @@ void timerInit ()
    const LETIMER_Init_TypeDef letimerInitData = {
      false,               // enabled later on
      true,                // continue operation during debug
-     true,                // load COMP0 into CNT on UF
-     true,               // load COMP1 into COMP0 when REP0==0
+     false,                // load COMP0 into CNT on UF
+     false,               // load COMP1 into COMP0 when REP0==0
      0,                   // default output pin 1 value
      0,                   // default output pin 2 value
      letimerUFOANone,     // no underflow output
@@ -45,7 +45,7 @@ void timerInit ()
 
    // calculate and load COMP0 (top)
 //   uint32_t intTime= LETIMER_PERIOD_MS * (2^15)/(4*1000);
-   LETIMER_CompareSet(LETIMER0,0,intTime);                   //first load only
+//   LETIMER_CompareSet(LETIMER0,0,intTime);                   //first load only
 
 
    // Clear all IRQ flags in the LETIMER0 IF
@@ -56,6 +56,7 @@ void timerInit ()
    tempData = LETIMER_IEN_UF ;
 
    LETIMER_IntEnable (LETIMER0, tempData); // Make sure you have defined the ISR routine LETIMER0_IRQHandler()
+   LETIMER0->IEN |= 0x04;
 
    // Enable the timer and start counting
    LETIMER_Enable (LETIMER0, true);
@@ -108,13 +109,13 @@ void timerWaitUs_polled(uint32_t us_wait)
 void timerWaitUs_irq(uint32_t us_wait)
 {
 
-  if(us_wait<122 || us_wait>999424)
-      {
-      LOG_ERROR("wait time out of range");
-      return;
-      }
+//  if(us_wait<122 || us_wait>999424)
+//      {
+//      LOG_ERROR("wait time out of range");
+//      return;
+//      }
   uint32_t startTime=LETIMER_CounterGet(LETIMER0);
-  uint32_t comp1_value;
+  uint32_t comp1_value=0;
 
   //uint32_t actual_wait;
 
@@ -131,8 +132,11 @@ void timerWaitUs_irq(uint32_t us_wait)
     LETIMER_CompareSet(LETIMER0,1,comp1_value);
 
     uint32_t tempData = LETIMER_IEN_COMP1 ;
+    //clear interrupt here
 
     LETIMER_IntEnable (LETIMER0, tempData);
+    LETIMER0->IEN |= 0x06;
+
 
 
 
