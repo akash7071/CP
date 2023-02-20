@@ -51,11 +51,16 @@
  *
  *
  ******************************************************************************/
+
+
 #include <app.h>
 #include "em_common.h"
 #include "app_assert.h"
 #include "sl_bluetooth.h"
 #include "gatt_db.h"
+
+
+
 
 #define INCLUDE_LOG_DEBUG 1
 #define DELAY_TEST 0
@@ -72,10 +77,11 @@
 #include "sl_status.h"             // for sl_status_print()
 #include "em_gpio.h"
 #include "src/ble_device_type.h"
+
 #include "src/gpio.h"
 #include "src/lcd.h"
-#include "src/oscillator.h"
-#include "src/timer.h"
+#include <src/oscillators.h>
+#include <src/timers.h>
 #include "src/irq.h"
 #include "src/log.h"
 #include "src/i2c.h"
@@ -94,8 +100,29 @@
 //uint32_t onTime=0;    //extern variable init
 uint32_t intTime=0;   //extern variable init
 uint16_t eventLog=0;
-eventEnum event =EVENT_E;
 
+I2C_TransferSeq_TypeDef transferSequence;
+
+uint16_t nextEvent=1;
+uint8_t i=0;
+bool readOp=1;
+bool writeOp=0;
+
+
+
+
+
+enum myStates_t
+{
+  IDLE,
+  WAIT_FOR_TIMER,
+  WAIT_FOR_I2C_COMPLETE
+//  WAIT_FOR_TIMER_2,
+//  WAIT_FOR_READ_COMPLETE
+
+};
+
+eventEnum event =IDLE_EVENT;
 
 
 
@@ -176,28 +203,6 @@ sl_power_manager_on_isr_exit_t app_sleep_on_isr_exit(void)
 
 
 
-/**************************************************************************//**
- * Function to enable GPIO SCL and SDA and set sensor enable.
- *****************************************************************************/
-
-void enableI2CGPIO()
-{
-  GPIO_PinModeSet(gpioPortC, 10, gpioModePushPull, false);
-  GPIO_PinModeSet(gpioPortC, 11, gpioModePushPull, false);
-  GPIO_PinOutSet(gpioPortD,15);
-  i2cInit();
-}
-
-/**************************************************************************//**
- * Function to disable GPIO SCL and SDA and clear sensor enable.
- *****************************************************************************/
-void disableI2CGPIO()
-{
-  GPIO_PinModeSet(gpioPortC, 10, gpioModeDisabled, false);
-  GPIO_PinModeSet(gpioPortC, 11, gpioModeDisabled, false);
-  GPIO_PinOutClear(gpioPortD,15);
-
-}
 
 
 /**************************************************************************//**
@@ -209,7 +214,7 @@ SL_WEAK void app_init(void)
   // This is called once during start-up.
   // Don't call any Bluetooth API functions until after the boot event.
 
-
+//  intTime=((LETIMER_PERIOD_MS)* 32768)/(8*1000); //computing intTime
 
 
 #if LOWEST_ENERGY_MODE<3                               //for energy modes EM0,EM1,EM2
@@ -242,21 +247,6 @@ SL_WEAK void app_init(void)
 
 
 
-/**************************************************************************//**
- * Function to execute the control flow to read temperature from the sensor
- * through I2C
- *****************************************************************************/
-void read_temp_from_si7021()
-{
-  enableI2CGPIO();            //enable GPIO to the sensor
-  timerWaitUs(80000);          //wait for sensor to boot up
-  startMeasurement();         //send command to start temp measurement on I2C
-  timerWaitUs(11000);          //wait for successful read
-  readMeasurement();          //read temp from buffer
-  disableI2CGPIO();           //disable GPIO  for LPM
-
-
-}
 
 #if DELAY_TEST
 /**************************************************************************//**
@@ -266,47 +256,47 @@ void read_temp_from_si7021()
 
 void delayTest()
 {
-  timerWaitUs(8);
+  timerWaitUs_polled(8);
   GPIO_PinOutToggle(5,4);
-  timerWaitUs(1);
-  GPIO_PinOutToggle(5,4);
-
-  timerWaitUs(80);
-  GPIO_PinOutToggle(5,4);
-  timerWaitUs(11);
+  timerWaitUs_polled(1);
   GPIO_PinOutToggle(5,4);
 
-  timerWaitUs(800);
+  timerWaitUs_polled(80);
   GPIO_PinOutToggle(5,4);
-  timerWaitUs(110);
-  GPIO_PinOutToggle(5,4);
-
-  timerWaitUs(8000);
-  GPIO_PinOutToggle(5,4);
-  timerWaitUs(1100);
+  timerWaitUs_polled(11);
   GPIO_PinOutToggle(5,4);
 
-  timerWaitUs(80000);
+  timerWaitUs_polled(800);
   GPIO_PinOutToggle(5,4);
-  timerWaitUs(11000);
+  timerWaitUs_polled(110);
   GPIO_PinOutToggle(5,4);
 
-
-  timerWaitUs(800000);
+  timerWaitUs_polled(8000);
   GPIO_PinOutToggle(5,4);
-  timerWaitUs(110000);
+  timerWaitUs_polled(1100);
+  GPIO_PinOutToggle(5,4);
+
+  timerWaitUs_polled(80000);
+  GPIO_PinOutToggle(5,4);
+  timerWaitUs_polled(11000);
   GPIO_PinOutToggle(5,4);
 
 
-  timerWaitUs(8000000);
+  timerWaitUs_polled(800000);
   GPIO_PinOutToggle(5,4);
-  timerWaitUs(1100000);
+  timerWaitUs_polled(110000);
   GPIO_PinOutToggle(5,4);
 
 
-  timerWaitUs(80000000);
+  timerWaitUs_polled(8000000);
   GPIO_PinOutToggle(5,4);
-  timerWaitUs(11000000);
+  timerWaitUs_polled(1100000);
+  GPIO_PinOutToggle(5,4);
+
+
+  timerWaitUs_polled(80000000);
+  GPIO_PinOutToggle(5,4);
+  timerWaitUs_polled(11000000);
   GPIO_PinOutToggle(5,4);
 
 
@@ -321,6 +311,33 @@ void delayTest()
 SL_WEAK void app_process_action(void)
 {
 
+//  timerWaitUs_irq(80000);
+//  GPIO_PinOutToggle(5,4);
+//  timerWaitUs_irq(80000);
+//  GPIO_PinOutToggle(5,4);
+//  timerWaitUs_irq(80000);
+//  GPIO_PinOutToggle(5,4);
+//  timerWaitUs_irq(80000);
+//  GPIO_PinOutToggle(5,4);
+//  timerWaitUs_irq(80000);
+//  GPIO_PinOutToggle(5,4);
+//  timerWaitUs_irq(80000);
+//  GPIO_PinOutToggle(5,4);
+//  timerWaitUs_irq(80000);
+//  GPIO_PinOutToggle(5,4);
+//  timerWaitUs_irq(80000);
+//  GPIO_PinOutToggle(5,4);
+//  timerWaitUs_irq(80000);
+//  GPIO_PinOutToggle(5,4);
+//  timerWaitUs_irq(80000);
+//  GPIO_PinOutToggle(5,4);
+//  timerWaitUs_irq(80000);
+//  GPIO_PinOutToggle(5,4);
+//  timerWaitUs_irq(80000);
+//  GPIO_PinOutToggle(5,4);
+
+
+
   // Put your application code here for A1 to A4.
   // This is called repeatedly from the main while(1) loop
   // Notice: This function is not passed or has access to Bluetooth stack events.
@@ -328,40 +345,78 @@ SL_WEAK void app_process_action(void)
 #if DELAY_TEST
   delayTest();
 #endif
-  event=getEvent();                 //get event from scheduler
-  switch(event)
 
-  {
+    enum myStates_t currentState=IDLE;
+    static enum myStates_t nextState = IDLE;
 
-  case READ_TEMP:                   //case for reading temperature from sensor
-    {
-      read_temp_from_si7021();
-      event=EVENT_E;                //switch to empty case
-      break;
-    }
+    currentState=nextState;
+    event=getEvent();                 //get event from scheduler
 
-  case EVENT_B:                     //reserved for future event
-    {
-     ;
-    }
-  case EVENT_C:                     //reserved for future event
-    {
-     ;
-    }
-  case EVENT_D:                     //reserved for future event
-    {
-     ;
-    }
-  case EVENT_E:                     //reserved for future event
-    {
-     ;
-    }
-  default:
-    {
-      ;
-    }
 
-  }
+      switch(currentState)
+      {
+
+      case IDLE:
+        if(event==1)
+          {
+            enableI2CGPIO();
+            timerWaitUs_irq(80000);
+            nextState=WAIT_FOR_TIMER;
+            writeOp=1;
+            break;
+           }
+
+
+        break;
+
+
+      case WAIT_FOR_TIMER:
+        if(event==2 && writeOp==1)
+          {
+            sl_power_manager_add_em_requirement(SL_POWER_MANAGER_EM1);
+            startMeasurement();
+//            writeOp=0;
+            nextState=WAIT_FOR_I2C_COMPLETE;
+            break;
+          }
+        else if(event==2 && readOp==1)
+          {
+            sl_power_manager_add_em_requirement(SL_POWER_MANAGER_EM1);
+            readMeasurement();
+            nextState=WAIT_FOR_I2C_COMPLETE;
+            break;
+          }
+        break;
+
+
+      case WAIT_FOR_I2C_COMPLETE:
+        if(event==3 && writeOp==1)
+          {
+            sl_power_manager_remove_em_requirement(SL_POWER_MANAGER_EM1);
+            timerWaitUs_irq(10800);
+            writeOp=0;
+            readOp=1;
+            nextState=WAIT_FOR_TIMER;
+            break;
+          }
+        else if(event==3 && readOp==1)
+          {
+            sl_power_manager_remove_em_requirement(SL_POWER_MANAGER_EM1);
+            readOp=0;
+            dispTemperature();
+            disableI2CGPIO();
+            nextState=IDLE;
+            break;
+          }
+        break;
+
+
+
+
+
+
+      }
+
 
 } // app_process_action()
 

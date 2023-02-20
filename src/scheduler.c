@@ -1,27 +1,75 @@
 #include "app.h"
 #include "em_core.h"
+#include "sl_power_manager.h"
+#include "src/i2c.h"
+#include "src/timers.h"
 
 
-#define READ_TEMP_I2C 1
-#define EVENTB 2
-#define EVENTC 4
-#define EVENTD 8
+#define COMP0_EVENT 1
+#define COMP1_EVENT 2
+#define I2C_COMPLETE_EVENT 4
+#define IDLE_EVENT 8
 #define EVENTE 16
+
+//uint16_t eventLog;
+
+
+
+
+
+bool ufEvent=0;
+bool comp1Event=0;
+bool i2cTransferComplete=0;
+bool writeCompleted=0;
+bool readCompleted=0;
+
+
+
+
 
 /**************************************************************************//**
  * Function to set the event for read temperature every 3s
  *****************************************************************************/
 
-void schedulerSetEvent3s()
+void setCOMP0Event()
 {
  CORE_DECLARE_IRQ_STATE;
  CORE_ENTER_CRITICAL();
- eventLog|=READ_TEMP_I2C;
+ eventLog|=COMP0_EVENT;
+
  CORE_EXIT_CRITICAL();
 
 
 }
 
+
+void setCOMP1Event()
+{
+  CORE_DECLARE_IRQ_STATE;
+  CORE_ENTER_CRITICAL();
+  eventLog|=COMP1_EVENT;
+
+  CORE_EXIT_CRITICAL();
+}
+
+
+void setI2CCompleteEvent()
+{
+  CORE_DECLARE_IRQ_STATE;
+  CORE_ENTER_CRITICAL();
+  eventLog|=I2C_COMPLETE_EVENT;
+
+  CORE_EXIT_CRITICAL();
+}
+
+
+//void setSchedulerEvent()
+//{
+//  if(event==IDLE)
+//    {
+//
+//    }
+//}
 /**************************************************************************//**
  * Function to read the events log and return an active event through priority
  * and clear the returned event
@@ -30,38 +78,52 @@ void schedulerSetEvent3s()
 
 uint8_t getEvent()
 {
-  if(eventLog & 1<<0)
+  if((eventLog & COMP0_EVENT) )
     {
       CORE_DECLARE_IRQ_STATE;
       CORE_ENTER_CRITICAL();
-      eventLog &= ~(1 << (READ_TEMP_I2C-1));
+      eventLog &= ~(1 << (COMP0_EVENT-1));
       CORE_EXIT_CRITICAL();
-      return READ_TEMP;
+//      nextEvent=2;
+      return COMP0_UF;
     }
 
-  else if(eventLog & 1<<1)
+  else if((eventLog & COMP1_EVENT) )
     {
-       eventLog &= ~(1 << (EVENT_B-1));
-       return EVENT_B;
+       CORE_DECLARE_IRQ_STATE;
+       CORE_ENTER_CRITICAL();
+       eventLog &= ~(1 << (COMP1_EVENT-1));
+       CORE_EXIT_CRITICAL();
+
+//       nextEvent=3;
+
+       return COMP1_UF;
      }
 
-  else if(eventLog & 1<<2)
+  else if(eventLog & I2C_COMPLETE_EVENT )
     {
-      eventLog &= ~(1 << (EVENT_C-1));
-      return EVENT_C;
+      CORE_DECLARE_IRQ_STATE;
+      CORE_ENTER_CRITICAL();
+      eventLog &= ~(1 << (I2C_COMPLETE_EVENT-1));
+      CORE_EXIT_CRITICAL();
+//      nextEvent=4;
+
+
+
+      return I2C_TRANSFER_COMPLETE;
     }
 
-  else if(eventLog & 1<<3)
-    {
-      eventLog &= ~(1 << (EVENT_D-1));
-      return EVENT_D;
-    }
 
 
-  else
-    return EVENT_E;
+
+
 
 
 
   return 0;
+}
+
+void stateMachine()
+{
+
 }

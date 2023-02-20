@@ -10,6 +10,11 @@
 
 void schedulerSetEvent3s();
 uint8_t getEvent();
+void setCOMP0Event();
+void setCOMP1Event();
+
+void setI2CCompleteEvent();
+void stateMachine();
 
 
 #endif /* SRC_SCHEDULER_H_ */

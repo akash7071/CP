@@ -9,8 +9,8 @@
  * @resources  Starter code from github classroom, prerecorded lecture.
 */
 #include <app.h>
+#include <src/oscillators.h>
 #include "em_cmu.h"
-#include "oscillator.h"
 
 
 
@@ -33,7 +33,13 @@ void oscillatorInit()
     }
 #endif
 
-  CMU_ClockEnable(cmuClock_LETIMER0 ,1);                    //Enable clock to LETIMER
+//        CMU_OscillatorEnable(cmuOsc_LFXO ,1,1);               //Enable LFXO oscillator
+//        CMU_ClockSelectSet(cmuClock_LFA,cmuSelect_LFXO);         //Select the appropriate Low Frequency clock for the LFA clock tree
+//        CMU_ClockEnable(cmuClock_LFA ,1);                     //Enable clock to LFA tree
+//        CMU_ClockDivSet(cmuClock_LETIMER0,8);                 //set prescalar to 8
+
+
+        CMU_ClockEnable(cmuClock_LETIMER0 ,1);                    //Enable clock to LETIMER
 
 
 

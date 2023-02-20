@@ -54,6 +54,7 @@
 //           definitions can be added if the caller requires theses.
 
 #include "em_common.h"
+#include "sl_i2cspm.h"
 
 #ifndef SRC_APP_H_
 #define SRC_APP_H_
@@ -65,16 +66,30 @@
 //extern uint32_t onTime;     //extern variables to calculate onTime value for comp0
 extern uint32_t intTime;    //extern variables to calculate offTime value for comp0
 extern uint16_t eventLog;
+
+extern bool ufEvent;
+extern bool comp1Event;
+extern bool i2cTransferComplete;
+extern bool writeCompleted;
+extern bool readCompleted;
+
+
+
 typedef enum
 {
-  READ_TEMP,
-  EVENT_B,
-  EVENT_C,
-  EVENT_D,
-  EVENT_E
+  IDLE_EVENT,
+  COMP0_UF,
+  COMP1_UF,
+  I2C_TRANSFER_COMPLETE
 } eventEnum;
 
 extern eventEnum event;
+
+
+
+
+
+extern uint32_t timePassed;
 
 
 

@@ -13,5 +13,6 @@
 #define SRC_IRQ_H_
 
 void LETIMER0_IRQHandler();
+uint32_t letimerMilliseconds();
 
 #endif /* SRC_IRQ_H_ */

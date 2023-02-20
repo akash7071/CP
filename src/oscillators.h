@@ -9,12 +9,9 @@
  * @resources  Starter code from github classroom, prerecorded lecture.
 */
 
-#ifndef SRC_TIMER_H_
-#define SRC_TIMER_H_
+#ifndef SRC_OSCILLATORS_H_
+#define SRC_OSCILLATORS_H_
 
-void timerInit();
-void timerWaitUs(uint32_t us_wait);
+void oscillatorInit();
 
-
-
-#endif /* SRC_TIMER_H_ */
+#endif /* SRC_OSCILLATORS_H_ */

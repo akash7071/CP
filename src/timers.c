@@ -1,3 +1,4 @@
+
 /*
  * @student    Akash Patil, Akash.Patil@Colorado.edu
  * @edit       Energy profiles
@@ -12,9 +13,10 @@
 
 #include <app.h>
 #include "em_letimer.h"
-#include "timer.h"
+#include <src/timers.h>
 #include "src/log.h"
 
+//uint32_t intTime;
 
 
 
@@ -33,7 +35,7 @@ void timerInit ()
      letimerUFOANone,     // no underflow output
      letimerUFOANone,     // NO underflow output
      letimerRepeatFree,   // free running mode
-     0                    // COMP0(top) Value, loaded later
+     intTime                    // COMP0(top) Value, loaded later
  };
 
 
@@ -67,15 +69,26 @@ void timerInit ()
  *****************************************************************************/
 
 
-void timerWaitUs(uint32_t us_wait)
+void timerWaitUs_polled(uint32_t us_wait)
 {
   if(us_wait<122 || us_wait>999424)
       {
       LOG_ERROR("wait time out of range");
       return;
       }
+  uint32_t actual_wait;
 
-  uint32_t actual_wait=us_wait/244;
+  #if LOWEST_ENERGY_MODE<3                               //for energy modes EM0,EM1,EM2
+      {
+        actual_wait=us_wait/244;               //delay compute for LXFO
+      }
+  #else                                                    //for energy modes EM3
+        {
+          actual_wait=us_wait/1000;
+        }
+  #endif
+
+
 
 
     //LOG("Too less time");
@@ -85,6 +98,49 @@ void timerWaitUs(uint32_t us_wait)
      ;
 
 }
+
+
+/**************************************************************************//**
+ * Function to create a delay in multiples of 122 us
+ *****************************************************************************/
+
+
+void timerWaitUs_irq(uint32_t us_wait)
+{
+
+  if(us_wait<122 || us_wait>999424)
+      {
+      LOG_ERROR("wait time out of range");
+      return;
+      }
+  uint32_t startTime=LETIMER_CounterGet(LETIMER0);
+  uint32_t comp1_value;
+
+  //uint32_t actual_wait;
+
+#if LOWEST_ENERGY_MODE<3                               //for energy modes EM0,EM1,EM2
+    {
+    comp1_value=startTime-(us_wait/244);
+    }
+#else                                                    //for energy modes EM3
+    {
+      comp1_value=startTime-(us_wait/1000);
+    }
+#endif
+
+    LETIMER_CompareSet(LETIMER0,1,comp1_value);
+
+    uint32_t tempData = LETIMER_IEN_COMP1 ;
+
+    LETIMER_IntEnable (LETIMER0, tempData);
+
+
+
+}
+
+
+
+
 
 
 
