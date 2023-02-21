@@ -21,7 +21,7 @@ See [Mastering Markdown](https://guides.github.com/features/mastering-markdown/)
    Answer:
    538.72ua
    <br>Screenshot:  
-   ![Avg_current_LPM_Off](screenshots/assignment4/avg_current_lpm_on.jpg)  
+   ![Avg_current_LPM_Off](screenshots/assignment4/avg_current_lpm_on.png)  
 
 4. How long is the Si7021 Powered On for 1 temperature reading?
    Answer:
