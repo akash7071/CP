@@ -14,8 +14,7 @@
 //uint16_t eventLog;
 
 
-
-
+static int eventCompleted=0;
 
 bool ufEvent=0;
 bool comp1Event=0;
@@ -74,39 +73,55 @@ void setI2CCompleteEvent()
  * Function to read the events log and return an active event through priority
  * and clear the returned event
  *****************************************************************************/
-eventEnum lastEvent =IDLE_EVENT;
+eventEnum lastEvent1 =IDLE_EVENT;
+eventEnum lastEvent2 =IDLE_EVENT;
 
 uint8_t getEvent()
 {
-  if((eventLog & COMP0_EVENT) && (lastEvent!=COMP0_UF))
+  if((eventLog & COMP0_EVENT) && (lastEvent1!=COMP0_UF))
     {
       CORE_DECLARE_IRQ_STATE;
       CORE_ENTER_CRITICAL();
       eventLog &= ~(1 << (COMP0_EVENT-1));
       CORE_EXIT_CRITICAL();
 //      nextEvent=2;
-      lastEvent=COMP0_UF;
+      lastEvent1=COMP0_UF;
       return COMP0_UF;
     }
 
-  else if((eventLog & COMP1_EVENT))
+  else if((eventLog & COMP1_EVENT))// && (lastEvent2!=COMP1_UF))
     {
        CORE_DECLARE_IRQ_STATE;
        CORE_ENTER_CRITICAL();
        eventLog &= ~(1 << (COMP1_EVENT-1));
        CORE_EXIT_CRITICAL();
+       lastEvent2=COMP1_UF;
 
 //       nextEvent=3;
 
        return COMP1_UF;
      }
 
-  else if(eventLog & I2C_COMPLETE_EVENT )
+  else if((eventLog & I2C_COMPLETE_EVENT))
     {
       CORE_DECLARE_IRQ_STATE;
       CORE_ENTER_CRITICAL();
       eventLog &= ~(1 << (I2C_COMPLETE_EVENT-1));
       CORE_EXIT_CRITICAL();
+
+      eventCompleted++;
+      if(eventCompleted%2==0)
+        {
+          lastEvent1=I2C_TRANSFER_COMPLETE;
+          lastEvent2=I2C_TRANSFER_COMPLETE;
+        }
+      else
+        {
+          lastEvent2=I2C_TRANSFER_COMPLETE;
+        }
+
+
+
 //      nextEvent=4;
 
 

@@ -101,8 +101,6 @@
 uint32_t intTime=0;   //extern variable init
 uint16_t eventLog=0;
 
-I2C_TransferSeq_TypeDef transferSequence;
-
 uint16_t nextEvent=1;
 uint8_t i=0;
 bool readOp=1;
@@ -242,7 +240,9 @@ SL_WEAK void app_init(void)
 
     NVIC_ClearPendingIRQ (LETIMER0_IRQn); //clear pending interrupts in LETIMER
     NVIC_EnableIRQ(LETIMER0_IRQn);        //configure NVIC to allow LETIMER interrupt
+#if DELAY_TEST
     timerWaitUs_irq(100000);
+#endif
 
 } // app_init()
 
@@ -313,90 +313,68 @@ void delayTest()
 SL_WEAK void app_process_action(void)
 {
 
-//  timerWaitUs_irq(80000);
-//  GPIO_PinOutToggle(5,4);
-//  timerWaitUs_irq(80000);
-//  GPIO_PinOutToggle(5,4);
-//  timerWaitUs_irq(80000);
-//  GPIO_PinOutToggle(5,4);
-//  timerWaitUs_irq(80000);
-//  GPIO_PinOutToggle(5,4);
-//  timerWaitUs_irq(80000);
-//  GPIO_PinOutToggle(5,4);
-//  timerWaitUs_irq(80000);
-//  GPIO_PinOutToggle(5,4);
-//  timerWaitUs_irq(80000);
-//  GPIO_PinOutToggle(5,4);
-//  timerWaitUs_irq(80000);
-//  GPIO_PinOutToggle(5,4);
-//  timerWaitUs_irq(80000);
-//  GPIO_PinOutToggle(5,4);
-//  timerWaitUs_irq(80000);
-//  GPIO_PinOutToggle(5,4);
-//  timerWaitUs_irq(80000);
-//  GPIO_PinOutToggle(5,4);
-//  timerWaitUs_irq(80000);
-//  GPIO_PinOutToggle(5,4);
-
 
 
   // Put your application code here for A1 to A4.
   // This is called repeatedly from the main while(1) loop
   // Notice: This function is not passed or has access to Bluetooth stack events.
   // We will create/use a scheme that is far more energy efficient in later assignments.
+
+  enum myStates_t currentState=IDLE;
+  static enum myStates_t nextState = IDLE;
+
+  currentState=nextState;
+  event=getEvent();                 //get event from scheduler
 #if DELAY_TEST
-  delayTest();
+      while (1) {
+          currentState=nextState;
+          event=getEvent();
+
+
+              switch(currentState) {
+
+                case IDLE:
+
+                  if (event & 2) {
+                    timerWaitUs_irq(10000);
+                    gpioLed0SetOn();
+                    nextState=WAIT_FOR_TIMER;
+
+                  }
+                  break;
+
+
+                case WAIT_FOR_TIMER:
+                  if (event & 2) {
+                    timerWaitUs_irq(10000);
+                    gpioLed0SetOff();
+                    nextState=IDLE;
+
+                  }
+                  break;
+
+
+              } // switch
+
+          } // while (1)
 #endif
 
-    enum myStates_t currentState=IDLE;
-    static enum myStates_t nextState = IDLE;
-
-    currentState=nextState;
-    event=getEvent();                 //get event from scheduler
-
-    while (1) {
-        currentState=nextState;
-        event=getEvent();
 
 
-            switch(currentState) {
 
-              case IDLE:
-
-                if (event & 2) {
-                  timerWaitUs_irq(100000);
-                  gpioLed0SetOn();
-                  nextState=WAIT_FOR_TIMER;
-
-                }
-                break;
-
-
-              case WAIT_FOR_TIMER:
-                if (event & 2) {
-                  timerWaitUs_irq(100000);
-                  gpioLed0SetOff();
-                  nextState=IDLE;
-
-                }
-                break;
-
-
-            } // switch
-
-        } // while (1)
 
       switch(currentState)
       {
 
       case IDLE:
-        if(event==1)
+        if(event & 1)
           {
             enableI2CGPIO();
-            timerWaitUs_irq(80000);
+
             nextState=WAIT_FOR_TIMER;
             writeOp=1;
-            break;
+            timerWaitUs_irq(80000);
+
            }
 
 
@@ -404,42 +382,48 @@ SL_WEAK void app_process_action(void)
 
 
       case WAIT_FOR_TIMER:
-        if(event==2 && writeOp==1)
+        if( (event & 2) && (writeOp==1))
           {
+            nextState=WAIT_FOR_I2C_COMPLETE;
             sl_power_manager_add_em_requirement(SL_POWER_MANAGER_EM1);
             startMeasurement();
-//            writeOp=0;
-            nextState=WAIT_FOR_I2C_COMPLETE;
-            break;
+
+
+
           }
-        else if(event==2 && readOp==1)
+        else if((event & 2) && (readOp==1) )
           {
+            nextState=WAIT_FOR_I2C_COMPLETE;
             sl_power_manager_add_em_requirement(SL_POWER_MANAGER_EM1);
             readMeasurement();
-            nextState=WAIT_FOR_I2C_COMPLETE;
-            break;
+
+
           }
         break;
 
 
       case WAIT_FOR_I2C_COMPLETE:
-        if(event==3 && writeOp==1)
+
+        if( (event & 3) && (writeOp==1) )
           {
-            sl_power_manager_remove_em_requirement(SL_POWER_MANAGER_EM1);
-            timerWaitUs_irq(10800);
+            NVIC_DisableIRQ(I2C0_IRQn);
             writeOp=0;
             readOp=1;
             nextState=WAIT_FOR_TIMER;
-            break;
-          }
-        else if(event==3 && readOp==1)
-          {
             sl_power_manager_remove_em_requirement(SL_POWER_MANAGER_EM1);
+            timerWaitUs_irq(10800);
+
+          }
+        else if( (event & 3) && (readOp==1) )
+          {
+            NVIC_DisableIRQ(I2C0_IRQn);
+            nextState=IDLE;
             readOp=0;
+            sl_power_manager_remove_em_requirement(SL_POWER_MANAGER_EM1);
             dispTemperature();
             disableI2CGPIO();
-            nextState=IDLE;
-            break;
+
+
           }
         break;
 

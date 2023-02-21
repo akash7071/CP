@@ -12,9 +12,10 @@
 #define MEASURE_TEMP_CMD_NOBUSHOLD       0xF3
 
 
-extern I2C_TransferSeq_TypeDef transferSequence;
+ I2C_TransferSeq_TypeDef transferSequence;
  uint8_t cmd_data;
  uint16_t read_data;
+// I2C_TransferReturn_TypeDef transferStatus;
 
 
 /**************************************************************************//**
@@ -42,7 +43,7 @@ I2CSPM_Init_TypeDef I2C_Config = {
 
 
   I2CSPM_Init(&I2C_Config);
- uint32_t i2c_bus_frequency = I2C_BusFreqGet (I2C0);
+// uint32_t i2c_bus_frequency = I2C_BusFreqGet (I2C0);
 
 }
 
@@ -96,7 +97,7 @@ void readMeasurement()
 //  uint8_t read_data[2];
   transferSequence.addr = SI7021_I2C_BUS_ADDRESS << 1; // shift device address left
   transferSequence.flags = I2C_FLAG_READ;
-  transferSequence.buf[0].data = &read_data; // pointer to data to write
+  transferSequence.buf[0].data = (uint8_t*)&read_data; // pointer to data to write
   transferSequence.buf[0].len = sizeof(read_data);
 
 
@@ -121,17 +122,24 @@ void dispTemperature()
   uint32_t tempValue;
   float actual_temp;
   uint32_t rounded_temp;
-  uint8_t read_msb= read_data & 0xF0;
-  uint8_t read_lsb= read_data & 0x0F;
+  uint8_t readBytes [2] =
+  {
+    ((uint16_t)read_data >> 0) & 0xFF,  // shift by 0 not needed, of course, just stylistic
+    ((uint16_t)read_data >> 8) & 0xFF,
+  };
+//  uint8_t read_msb=(uint8_t *) read_data & 0xFF00;
+//  uint8_t read_lsb= (uint8_t *) read_data & 0x00FF;
 
   // Formula to decode read Temperature from the Si7021 Datasheet
-  tempValue = ((uint32_t) read_lsb << 8) + (read_msb & 0xfc);
+  tempValue = ((uint32_t) readBytes[0] << 8) + (readBytes[1] & 0xfc);
   actual_temp = (((tempValue) * 175.72) / 65536) - 46.85;
 
   // Round the temperature to an integer value
   rounded_temp = (uint32_t)(actual_temp + 0.5 - (actual_temp < 0));
 
   LOG_INFO("temperature:%d\n\r",rounded_temp);
+  //read_data=0;
+
 }
 
 
@@ -144,9 +152,10 @@ void dispTemperature()
 
 void enableI2CGPIO()
 {
+  GPIO_PinOutSet(gpioPortD,15);
   GPIO_PinModeSet(gpioPortC, 10, gpioModePushPull, false);
   GPIO_PinModeSet(gpioPortC, 11, gpioModePushPull, false);
-  GPIO_PinOutSet(gpioPortD,15);
+
 
 }
 

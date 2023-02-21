@@ -27,6 +27,8 @@ uint32_t timePassed=0;
 void LETIMER0_IRQHandler()
  {
 
+
+
   uint32_t intSource=LETIMER_IntGet(LETIMER0);
   if(intSource & LETIMER_IEN_UF)
     {
