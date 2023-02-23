@@ -49,6 +49,12 @@
 #define LED1_pin   5
 
 
+// PD10 traces to Expansion header 7
+#define PD_port     gpioPortD
+#define PD_port10   10
+
+
+
 
 // Set GPIO drive strengths and modes of operation
 void gpioInit()
@@ -64,7 +70,11 @@ void gpioInit()
 //	GPIO_PinModeSet(gpioPortC, 11, gpioModePushPull, false);
 
 
-
+  // From my A8, use PD10 / Expansion header 7 to monitor timing with a logic analyzer
+  // PD10 traces to Expansion header 7
+  GPIO_DriveStrengthSet(PD_port, gpioDriveStrengthWeakAlternateWeak);
+  GPIO_PinModeSet(PD_port, PD_port10, gpioModePushPull, false);
+  gpioPD10Off();
 
 
 
@@ -92,6 +102,20 @@ void gpioLed1SetOn()
 void gpioLed1SetOff()
 {
 	GPIO_PinOutClear(LED1_port,LED1_pin);
+}
+
+
+
+// test code
+void gpioPD10On()
+{
+  GPIO_PinOutSet(PD_port, PD_port10); // routes to Expansion Header pin 7
+}
+
+
+void gpioPD10Off()
+{
+  GPIO_PinOutClear(PD_port, PD_port10); // routes to Expansion Header pin 7
 }
 
 

@@ -99,7 +99,10 @@
 
 //uint32_t onTime=0;    //extern variable init
 uint32_t intTime=0;   //extern variable init
-uint16_t eventLog=0;
+//uint16_t eventLog=0; // Whoa!!!! - this is a private data structure for the scheduler!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! no no no
+
+
+
 
 uint16_t nextEvent=1;
 uint8_t i=0;
@@ -120,7 +123,7 @@ enum myStates_t
 
 };
 
-eventEnum event =IDLE_EVENT;
+//eventEnum event =IDLE_EVENT;
 
 
 
@@ -320,11 +323,20 @@ SL_WEAK void app_process_action(void)
   // Notice: This function is not passed or has access to Bluetooth stack events.
   // We will create/use a scheme that is far more energy efficient in later assignments.
 
+  // DOS: Note: Why is your state machine not in a function? What about isolation of functionality?
+  // Why should main-level code be concerned about all of the details of taking a temp
+  // measurement?
+
   enum myStates_t currentState=IDLE;
   static enum myStates_t nextState = IDLE;
 
-  currentState=nextState;
-  event=getEvent();                 //get event from scheduler
+  uint8_t event;
+
+
+  currentState = nextState;
+
+  event        = getEvent();                 //get event from scheduler
+
 #if DELAY_TEST
       while (1) {
           currentState=nextState;
@@ -367,10 +379,13 @@ SL_WEAK void app_process_action(void)
       {
 
       case IDLE:
-        if(event & 1)
+//DOS        if(event & 1)
+        if(event == 1)
           {
+            gpioPD10On(); // monitor Expansion header pin 7 with a logic analyzer
             enableI2CGPIO();
 
+//            LOG_INFO("To1 %d", event);
             nextState=WAIT_FOR_TIMER;
             writeOp=1;
             timerWaitUs_irq(80000);
@@ -382,8 +397,10 @@ SL_WEAK void app_process_action(void)
 
 
       case WAIT_FOR_TIMER:
-        if( (event & 2) && (writeOp==1))
+//DOS        if( (event & 2) && (writeOp==1))
+        if( (event == 2) && (writeOp==1))
           {
+//            LOG_INFO("To2a %d", event);
             nextState=WAIT_FOR_I2C_COMPLETE;
             sl_power_manager_add_em_requirement(SL_POWER_MANAGER_EM1);
             startMeasurement();
@@ -391,8 +408,10 @@ SL_WEAK void app_process_action(void)
 
 
           }
-        else if((event & 2) && (readOp==1) )
+//DOS        else if((event & 2) && (readOp==1) )
+        else if((event == 2) && (readOp==1) )
           {
+//            LOG_INFO("To2b %d", event);
             nextState=WAIT_FOR_I2C_COMPLETE;
             sl_power_manager_add_em_requirement(SL_POWER_MANAGER_EM1);
             readMeasurement();
@@ -404,35 +423,34 @@ SL_WEAK void app_process_action(void)
 
       case WAIT_FOR_I2C_COMPLETE:
 
-        if( (event & 3) && (writeOp==1) )
+//DOS        if( (event & 3) && (writeOp==1) )
+        if( (event == 4) && (writeOp==1) )
           {
             NVIC_DisableIRQ(I2C0_IRQn);
             writeOp=0;
             readOp=1;
+//            LOG_INFO("BackTo1 %d", event);
             nextState=WAIT_FOR_TIMER;
             sl_power_manager_remove_em_requirement(SL_POWER_MANAGER_EM1);
             timerWaitUs_irq(10800);
 
           }
-        else if( (event & 3) && (readOp==1) )
+//DOS        else if( (event & 3) && (readOp==1) )
+        else if( (event == 4) && (readOp==1) )
           {
             NVIC_DisableIRQ(I2C0_IRQn);
+//            LOG_INFO("To0 %d", event);
             nextState=IDLE;
             readOp=0;
             sl_power_manager_remove_em_requirement(SL_POWER_MANAGER_EM1);
             dispTemperature();
             disableI2CGPIO();
-
+            gpioPD10Off();
 
           }
         break;
 
-
-
-
-
-
-      }
+      } // switch
 
 
 } // app_process_action()

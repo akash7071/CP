@@ -30,18 +30,21 @@ void LETIMER0_IRQHandler()
 
 
   uint32_t intSource=LETIMER_IntGet(LETIMER0);
-  if(intSource & LETIMER_IEN_UF)
+//  if(intSource & LETIMER_IEN_UF) // DOS
+  if(intSource & LETIMER_IF_UF) // DOS
     {
-      LETIMER_IntClear(LETIMER0,4);
+      LETIMER_IntClear(LETIMER0, LETIMER_IF_UF); // DOS: never use constants, use the #defines!!!
       timePassed+=3000;
 //      GPIO_PinOutToggle(5,5);
 
       setCOMP0Event();
     }
 
-  if(intSource & LETIMER_IEN_COMP1)
+//  if(intSource & LETIMER_IEN_COMP1) // DOS
+  if(intSource & LETIMER_IF_COMP1)
     {
-      LETIMER_IntClear(LETIMER0,2);
+//      LETIMER_IntClear(LETIMER0,2); // DOS
+      LETIMER_IntClear(LETIMER0, LETIMER_IF_COMP1); // DOS: never use constants, use the #defines!!!
 //      GPIO_PinOutToggle(5,4);
       setCOMP1Event();
       LETIMER_IntDisable (LETIMER0, LETIMER_IEN_COMP1);
@@ -67,11 +70,15 @@ void I2C0_IRQHandler(void)
    // that we put into the data structure passed
    // to I2C_TransferInit()
 //   GPIO_PinOutToggle(5,4);
+
    transferStatus = I2C_Transfer(I2C0);
+
    if (transferStatus == i2cTransferDone)
    {
-    setI2CCompleteEvent();
+       setI2CCompleteEvent();
+//       LOG_INFO("I");
    }
+
    if (transferStatus < 0)
    {
        LOG_ERROR("%x", transferStatus);

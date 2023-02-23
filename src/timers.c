@@ -56,7 +56,8 @@ void timerInit ()
 //   tempData = LETIMER_IEN_UF ;
 
 //   LETIMER_IntEnable (LETIMER0, tempData); // Make sure you have defined the ISR routine LETIMER0_IRQHandler()
-   LETIMER0->IEN |= 0x04;
+//   LETIMER0->IEN |= 0x04; // DOS
+   LETIMER0->IEN |= LETIMER_IEN_UF;
 
    // Enable the timer and start counting
    LETIMER_Enable (LETIMER0, true);

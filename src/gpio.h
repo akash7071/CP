@@ -46,6 +46,9 @@
 
 
 
+
+
+
 // Function prototypes
 void gpioInit();
 void gpioLed0SetOn();
@@ -55,6 +58,9 @@ void gpioLed1SetOff();
 
 
 
+// testing functions
+void gpioPD10On(void);
+void gpioPD10Off(void);
 
 
 #endif /* SRC_GPIO_H_ */
