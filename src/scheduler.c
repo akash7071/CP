@@ -4,11 +4,30 @@
 #include "src/i2c.h"
 #include "src/timers.h"
 
+#include "sl_bt_api.h"
+#include "src/scheduler.h"
+
 
 // DOS: If the caller needs these, shouldn't they be defined in the .h file ???? !!!!!
-#define COMP0_EVENT        1
+#define UF_EVENT        1
 #define COMP1_EVENT        2
 #define I2C_COMPLETE_EVENT 4
+
+
+enum myStates_t
+{
+  IDLE,
+  WAIT_FOR_TIMER,
+  WAIT_FOR_I2C_COMPLETE
+//  WAIT_FOR_TIMER_2,
+//  WAIT_FOR_READ_COMPLETE
+
+};
+
+uint16_t nextEvent=1;
+uint8_t i=0;
+bool readOp=1;
+bool writeOp=0;
 
 //#define IDLE_EVENT 8
 //#define EVENTE 16
@@ -34,11 +53,11 @@ uint16_t eventLog=0;
  * Function to set the event for read temperature every 3s
  *****************************************************************************/
 
-void setCOMP0Event()
+void setUFEvent()
 {
  CORE_DECLARE_IRQ_STATE;
  CORE_ENTER_CRITICAL();
- eventLog |= COMP0_EVENT;
+ sl_bt_external_signal(UF_EVENT);
 
  CORE_EXIT_CRITICAL();
 
@@ -50,7 +69,7 @@ void setCOMP1Event()
 {
   CORE_DECLARE_IRQ_STATE;
   CORE_ENTER_CRITICAL();
-  eventLog |= COMP1_EVENT;
+  sl_bt_external_signal(COMP1_EVENT);
 
   CORE_EXIT_CRITICAL();
 }
@@ -60,7 +79,7 @@ void setI2CCompleteEvent()
 {
   CORE_DECLARE_IRQ_STATE;
   CORE_ENTER_CRITICAL();
-  eventLog |= I2C_COMPLETE_EVENT;
+  sl_bt_external_signal(I2C_COMPLETE_EVENT);
 
   CORE_EXIT_CRITICAL();
 }
@@ -89,11 +108,11 @@ uint8_t getEvent()
   // This code is broken, see fixed code below
   // #########################
 
-//  if((eventLog & COMP0_EVENT) && (lastEvent1!=COMP0_UF))
+//  if((eventLog & UF_EVENT) && (lastEvent1!=COMP0_UF))
 //    {
 //      CORE_DECLARE_IRQ_STATE;
 //      CORE_ENTER_CRITICAL();
-//      eventLog &= ~(1 << (COMP0_EVENT-1));
+//      eventLog &= ~(1 << (UF_EVENT-1));
 //      CORE_EXIT_CRITICAL();
 ////      nextEvent=2;
 //      lastEvent1=COMP0_UF;
@@ -142,9 +161,9 @@ uint8_t getEvent()
 //
 //  return 0;
 
-  if (eventLog & COMP0_EVENT) {
-      eventToReturn  = COMP0_EVENT;  // event to return
-      eventLog      ^= COMP0_EVENT;  // clear the event in our private data structure
+  if (eventLog & UF_EVENT) {
+      eventToReturn  = UF_EVENT;  // event to return
+      eventLog      ^= UF_EVENT;  // clear the event in our private data structure
   }
   else if (eventLog & COMP1_EVENT) {
       eventToReturn  = COMP1_EVENT;  // event to return
@@ -162,7 +181,97 @@ uint8_t getEvent()
 
 
 
-void stateMachine()
+void stateMachine(sl_bt_msg_t *evt)
 {
+  if((SL_BT_MSG_ID(evt->header))==sl_bt_evt_system_external_signal_id)
+    {
+
+      enum myStates_t currentState=IDLE;
+      static enum myStates_t nextState = IDLE;
+
+      uint32_t event=evt->data.evt_system_external_signal.extsignals;
+
+
+      currentState = nextState;
+
+  //    event        = getEvent();                 //get event from scheduler
+
+      switch(currentState)
+            {
+
+            case IDLE:
+      //DOS        if(event & 1)
+              if(event == 1)
+                {
+//                  gpioPD10On(); // monitor Expansion header pin 7 with a logic analyzer
+                  enableI2CGPIO();
+
+      //            LOG_INFO("To1 %d", event);
+                  nextState=WAIT_FOR_TIMER;
+                  writeOp=1;
+                  timerWaitUs_irq(80000);
+
+                 }
+
+
+              break;
+
+
+            case WAIT_FOR_TIMER:
+      //DOS        if( (event & 2) && (writeOp==1))
+              if( (event == 2) && (writeOp==1))
+                {
+      //            LOG_INFO("To2a %d", event);
+                  nextState=WAIT_FOR_I2C_COMPLETE;
+                  sl_power_manager_add_em_requirement(SL_POWER_MANAGER_EM1);
+                  startMeasurement();
+
+
+
+                }
+      //DOS        else if((event & 2) && (readOp==1) )
+              else if((event == 2) && (readOp==1) )
+                {
+      //            LOG_INFO("To2b %d", event);
+                  nextState=WAIT_FOR_I2C_COMPLETE;
+                  sl_power_manager_add_em_requirement(SL_POWER_MANAGER_EM1);
+                  readMeasurement();
+
+
+                }
+              break;
+
+
+            case WAIT_FOR_I2C_COMPLETE:
+
+      //DOS        if( (event & 3) && (writeOp==1) )
+              if( (event == 4) && (writeOp==1) )
+                {
+                  NVIC_DisableIRQ(I2C0_IRQn);
+                  writeOp=0;
+                  readOp=1;
+      //            LOG_INFO("BackTo1 %d", event);
+                  nextState=WAIT_FOR_TIMER;
+                  sl_power_manager_remove_em_requirement(SL_POWER_MANAGER_EM1);
+                  timerWaitUs_irq(10800);
+
+                }
+      //DOS        else if( (event & 3) && (readOp==1) )
+              else if( (event == 4) && (readOp==1) )
+                {
+                  NVIC_DisableIRQ(I2C0_IRQn);
+      //            LOG_INFO("To0 %d", event);
+                  nextState=IDLE;
+                  readOp=0;
+                  sl_power_manager_remove_em_requirement(SL_POWER_MANAGER_EM1);
+                  dispTemperature();
+                  disableI2CGPIO();
+//                  gpioPD10Off();
+
+                }
+              break;
+
+            } // switch
+    }//if
 
 }

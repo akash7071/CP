@@ -8,13 +8,17 @@
 #ifndef SRC_SCHEDULER_H_
 #define SRC_SCHEDULER_H_
 
+#include "sl_bt_api.h"
+
+
+
 void schedulerSetEvent3s();
 uint8_t getEvent();
-void setCOMP0Event();
+void setUFEvent();
 void setCOMP1Event();
 
 void setI2CCompleteEvent();
-void stateMachine();
+void stateMachine(sl_bt_msg_t *evt);
 
 
 #endif /* SRC_SCHEDULER_H_ */

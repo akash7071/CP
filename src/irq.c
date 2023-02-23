@@ -37,7 +37,7 @@ void LETIMER0_IRQHandler()
       timePassed+=3000;
 //      GPIO_PinOutToggle(5,5);
 
-      setCOMP0Event();
+      setUFEvent();
     }
 
 //  if(intSource & LETIMER_IEN_COMP1) // DOS
