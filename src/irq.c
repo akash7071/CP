@@ -29,7 +29,7 @@ void LETIMER0_IRQHandler()
 
 
 
-  uint32_t intSource=LETIMER_IntGet(LETIMER0);
+  uint32_t intSource=LETIMER_IntGetEnabled(LETIMER0);
 //  if(intSource & LETIMER_IEN_UF) // DOS
   if(intSource & LETIMER_IF_UF) // DOS
     {

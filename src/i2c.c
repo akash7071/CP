@@ -1,8 +1,11 @@
 #define INCLUDE_LOG_DEBUG 1
+
 #include "src/log.h"
+#include "gatt_db.h"
 #include "em_gpio.h"
 #include "sl_i2cspm.h"
 #include "src/timers.h"
+
 //#include "app.h"
 
 
@@ -16,7 +19,7 @@
  uint8_t                 cmd_data;
  uint16_t                read_data;
 
-
+ float    actual_temp;
 
 /**************************************************************************//**
  * Function to init I2C periphral
@@ -111,45 +114,31 @@ void readMeasurement()
 
 }
 
-void dispTemperature()
+uint32_t dispTemperature()
 {
   //code for converting read data to celsius degrees and print on serial output
 
   uint32_t tempValue;
-  float    actual_temp;
-//  uint32_t rounded_temp;
-
-
-//  uint8_t readBytes [2] =
-//  {
-//    ((uint16_t)read_data >> 0) & 0xFF,  // shift by 0 not needed, of course, just stylistic
-//    ((uint16_t)read_data >> 8) & 0xFF,
-//  };
-
-//  uint8_t read_msb=(uint8_t *) read_data & 0xFF00;
-//  uint8_t read_lsb= (uint8_t *) read_data & 0x00FF;
 
 
 
-  // Formula to decode read Temperature from the Si7021 Datasheet
-//  tempValue = ((uint32_t) readBytes[0] << 8) + (readBytes[1] & 0xfc);
-
-//  LOG_INFO("raw temp data=%x", read_data); // DOS
-//  tempValue = (uint32_t) ((((uint32_t) read_data[0]) << 8) | (((uint32_t) read_data[1]) >> 0)); // swap bytes BOB BOB
   tempValue = ((read_data & 0xFF00) >> 8) | // DOS
               ((read_data & 0x00FF) << 8);
-//  LOG_INFO("raw temp data=%x", tempValue); // DOS
+
 
 
   actual_temp = (((tempValue) * 175.72) / 65536) - 46.85;
 
 
-  // Round the temperature to an integer value
-//DOS  rounded_temp = (uint32_t)(actual_temp + 0.5 - (actual_temp < 0));
 
-//  LOG_INFO("temperature:%d", rounded_temp);
-  LOG_INFO("temperature:%f\r\n", actual_temp); // DOS  %f !!!! as actual_temp is float !!!!
-  //read_data=0;
+
+
+//  LOG_INFO("temperature:%f\r\n", actual_temp);
+
+  return (uint32_t)actual_temp;
+
+
+
 
 }
 

@@ -39,6 +39,8 @@ typedef struct
 ble_data_struct_t* getBleDataPtr(void);
 
 
+void updateGATTDB(uint32_t actual_temp);
+
 void handle_ble_event(sl_bt_msg_t *evt);
 //
 #endif /* SRC_BLE_H_ */

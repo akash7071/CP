@@ -3,9 +3,11 @@
 #include "sl_power_manager.h"
 #include "src/i2c.h"
 #include "src/timers.h"
-
+#define INCLUDE_LOG_DEBUG 1
+#include "src/log.h"
 #include "sl_bt_api.h"
 #include "src/scheduler.h"
+#include "src/ble.h"
 
 
 // DOS: If the caller needs these, shouldn't they be defined in the .h file ???? !!!!!
@@ -13,6 +15,7 @@
 #define COMP1_EVENT        2
 #define I2C_COMPLETE_EVENT 4
 
+ble_data_struct_t *ble_data2;
 
 enum myStates_t
 {
@@ -28,6 +31,7 @@ uint16_t nextEvent=1;
 uint8_t i=0;
 bool readOp=1;
 bool writeOp=0;
+uint32_t temperature=0;
 
 //#define IDLE_EVENT 8
 //#define EVENTE 16
@@ -183,7 +187,9 @@ uint8_t getEvent()
 
 void stateMachine(sl_bt_msg_t *evt)
 {
-  if((SL_BT_MSG_ID(evt->header))==sl_bt_evt_system_external_signal_id)
+  ble_data2=getBleDataPtr();
+  if((SL_BT_MSG_ID(evt->header))==sl_bt_evt_system_external_signal_id && ble_data2->connection_open==1 &&
+      ble_data2->ok_to_send_htm_indications==1)
     {
 
       enum myStates_t currentState=IDLE;
@@ -264,8 +270,10 @@ void stateMachine(sl_bt_msg_t *evt)
                   nextState=IDLE;
                   readOp=0;
                   sl_power_manager_remove_em_requirement(SL_POWER_MANAGER_EM1);
-                  dispTemperature();
+                  temperature=dispTemperature();
+
                   disableI2CGPIO();
+                  updateGATTDB(temperature);
 //                  gpioPD10Off();
 
                 }
