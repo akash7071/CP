@@ -210,7 +210,7 @@ void stateMachine(sl_bt_msg_t *evt)
               if(event == 1)
                 {
 //                  gpioPD10On(); // monitor Expansion header pin 7 with a logic analyzer
-                  enableI2CGPIO();
+//                  enableI2CGPIO();
 
       //            LOG_INFO("To1 %d", event);
                   nextState=WAIT_FOR_TIMER;
@@ -272,7 +272,7 @@ void stateMachine(sl_bt_msg_t *evt)
                   sl_power_manager_remove_em_requirement(SL_POWER_MANAGER_EM1);
                   temperature=dispTemperature();
 
-                  disableI2CGPIO();
+                  //disableI2CGPIO();
                   updateGATTDB(temperature);
 //                  gpioPD10Off();
 

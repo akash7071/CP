@@ -5,6 +5,7 @@
 #include "em_gpio.h"
 #include "sl_i2cspm.h"
 #include "src/timers.h"
+#include "src/gpio.h"
 
 //#include "app.h"
 
@@ -133,7 +134,7 @@ uint32_t dispTemperature()
 
 
 
-//  LOG_INFO("temperature:%f\r\n", actual_temp);
+  LOG_INFO("temperature:%f\r\n", actual_temp);
 
   return (uint32_t)actual_temp;
 
@@ -143,35 +144,6 @@ uint32_t dispTemperature()
 }
 
 
-
-
-/**************************************************************************//**
- * Function to enable GPIO SCL and SDA and set sensor enable.
- *****************************************************************************/
-
-
-// DOS: why are these in I2C.c -> they are supposed to be in gpio.c !!!
-void enableI2CGPIO()
-{
-  GPIO_PinOutSet(gpioPortD,15); // turn power on to the 7021
-  // DOS: Why are you setting these to pushpull, they have to be set to openDrain???
-//  GPIO_PinModeSet(gpioPortC, 10, gpioModePushPull, false);
-//  GPIO_PinModeSet(gpioPortC, 11, gpioModePushPull, false);
-
-
-}
-
-/**************************************************************************//**
- * Function to disable GPIO SCL and SDA and clear sensor enable.
- *****************************************************************************/
-void disableI2CGPIO()
-{
-
-// DOS: GPIO_PinModeSet(gpioPortC, 10, gpioModeDisabled, false);
-//  GPIO_PinModeSet(gpioPortC, 11, gpioModeDisabled, false);
-  GPIO_PinOutClear(gpioPortD,15); // turn power off to the 7021
-
-}
 
 
 /**************************************************************************//**

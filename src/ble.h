@@ -27,6 +27,7 @@ typedef struct
 
 
     uint8_t advertisingSetHandle;
+    uint8_t connectionHandle;
     bool connection_open; // true when in an open connection
     bool ok_to_send_htm_indications; // true when client enabled indications
     bool indication_in_flight; // true when an indication is in-flight

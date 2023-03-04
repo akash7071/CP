@@ -229,6 +229,7 @@ SL_WEAK void app_init(void)
     oscillatorInit();               //Initializing Oscillators
     timerInit();                    //Initializing letimer
     i2cInit();
+    enableI2CGPIO();
 
 
     NVIC_ClearPendingIRQ (LETIMER0_IRQn); //clear pending interrupts in LETIMER

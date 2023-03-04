@@ -62,5 +62,12 @@ void gpioLed1SetOff();
 void gpioPD10On(void);
 void gpioPD10Off(void);
 
+//I2C gpio enable and disable functions
+void enableI2CGPIO();
+void disableI2CGPIO();
+
+//display enable function
+void gpioSensorEnSetOn();
+void gpioSetDisplayExtcomin(bool value);
 
 #endif /* SRC_GPIO_H_ */

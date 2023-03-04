@@ -37,6 +37,10 @@
 
 #include "gpio.h"
 
+// Include logging specifically for this .c file
+#define INCLUDE_LOG_DEBUG 1
+#include "log.h"
+
 
 // Student Edit: Define these, 0's are placeholder values.
 // See the radio board user guide at https://www.silabs.com/documents/login/user-guides/ug279-brd4104a-user-guide.pdf
@@ -52,6 +56,11 @@
 // PD10 traces to Expansion header 7
 #define PD_port     gpioPortD
 #define PD_port10   10
+
+
+#define SENSOR_ENABLE 15
+#define DISP_ENABLE 15
+#define EXTCOMIN 13
 
 
 
@@ -118,8 +127,63 @@ void gpioPD10Off()
   GPIO_PinOutClear(PD_port, PD_port10); // routes to Expansion Header pin 7
 }
 
+/**************************************************************************//**
+ * Function to enable GPIO SCL and SDA and set sensor enable.
+ *****************************************************************************/
 
 
+
+void enableI2CGPIO()
+{
+  GPIO_PinOutSet(gpioPortD,SENSOR_ENABLE); // turn power on to the 7021
+
+
+
+
+  // DOS: Why are you setting these to pushpull, they have to be set to openDrain???
+//  GPIO_PinModeSet(gpioPortC, 10, gpioModePushPull, false);
+//  GPIO_PinModeSet(gpioPortC, 11, gpioModePushPull, false);
+
+
+}
+
+/**************************************************************************//**
+ * Function to disable GPIO SCL and SDA and clear sensor enable.
+ *****************************************************************************/
+void disableI2CGPIO()
+{
+
+// DOS: GPIO_PinModeSet(gpioPortC, 10, gpioModeDisabled, false);
+//  GPIO_PinModeSet(gpioPortC, 11, gpioModeDisabled, false);
+
+
+
+  GPIO_PinOutClear(gpioPortD,SENSOR_ENABLE); // turn power off to the 7021
+
+}
+
+
+/**************************************************************************//**
+ * Function to enable GPIO DISP_ENABLE to LCD
+ *****************************************************************************/
+
+
+void gpioSensorEnSetOn()
+{
+
+  GPIO_PinOutSet(gpioPortD,DISP_ENABLE); // turn power on to the LCD
+}
+
+
+/**************************************************************************//**
+ * Function to set and reset EXTCOMIN periodically
+ *****************************************************************************/
+void gpioSetDisplayExtcomin(bool value)
+{
+
+  GPIO_PinModeSet(gpioPortD, EXTCOMIN, gpioModePushPull, value);
+  LOG_INFO("\r\n1sec");
+}
 
 
 

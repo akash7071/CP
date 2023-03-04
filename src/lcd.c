@@ -1,24 +1,32 @@
-/***********************************************************************
- * @file      lcd.c
- * @version   1.0
- * @brief     LCD implementation file. A complete re-write of the LCD support code
- *            based on Gecko SDK 3.1 and Simplicity Studio 5.1.
- *            Required components are:
- *               Memory LCD with USART SPI drive
- *               Monochrome Sharp memory LCD
- *               GLIB Graphics Library (glib.c)
- *               GLIB driver for Sharp Memory LCD (dmd_memlcd.c, dmd.h)
- *
- * @author    Dave Sluiter, David.Sluiter@colorado.edu
- * @date      March 15, 2021
- *
- * @institution University of Colorado Boulder (UCB)
- * @course      ECEN 5823: IoT Embedded Firmware
- * @instructor  David Sluiter
- *
- * @assignment Starter code
- * @due        NA
- *
+/*
+  lcd.c
+
+   Created on: Dec 12, 2018
+       Author: Dan Walkes
+   Updated by Dave Sluiter Dec 31, 2020. Minor edits with #defines.
+
+   March 17
+   Dave Sluiter: Use this file to define functions that set up or control GPIOs.
+
+ *
+ *
+ * @student    Akash Patil, Akash.Patil@Colorado.edu
+ *
+ * @edit       added lcd gpio init calls
+ * @date      Jan 25th 2023
+ * @institution University of Colorado Boulder (UCB)
+ * @course      ECEN 5823-001: IoT Embedded Firmware (Spring 2023)
+ * @instructor  David Sluiter
+ * @assignment ecen5823-assignment6-SimplicityStudio
+ * @due        Jan 25th, 2023
+ * @resources  Utilized Silicon Labs' libraries to implement functionality.
+ *             This code is based on the Silicon Labs example MEMLCD_baremetal
+ *             as part of SSv5 and Gecko SDK 3.1.
+ *
+
+ *
+
+
  * @resources  This code is based on the Silicon Labs example MEMLCD_baremetal
  *             as part of SSv5 and Gecko SDK 3.1.
  *
@@ -48,10 +56,6 @@
  */
 
 
-/*
- * Student edit: Add your name and email address here:
- * @student    Awesome Student, Awesome.Student@Colorado.edu
-*/
 
 
 #include "stdarg.h" // for arguments
@@ -64,7 +68,7 @@
 
 #include "glib.h" // the low-level graphics driver/library
 #include "dmd.h"  // the dot matrix display driver
-
+#include "src/gpio.h"
 
 #include "lcd.h"
 
@@ -74,6 +78,7 @@
 #include "log.h"
 
 
+#define SOFT_TIMER_DURATION 32768
 
 
 
@@ -257,7 +262,7 @@ void displayInit()
     //           the time now for the LCD to function properly.
     //           Create that function to gpio.c/.h Then add that function call here.
     //
-    //gpioSensorEnSetOn(); // we need SENSOR_ENABLE=1 which is tied to DISP_ENABLE
+    gpioSensorEnSetOn(); // we need SENSOR_ENABLE=1 which is tied to DISP_ENABLE
     //                     // for the LCD, on all the time now
 
 
@@ -315,11 +320,11 @@ void displayInit()
     // Students: Figure out what parameters to pass in to sl_bt_system_set_soft_timer() to
     //           set up a 1 second repeating soft timer and uncomment the following lines
 
-	  //sl_status_t          timer_response;
-	  //timer_response = sl_bt_system_set_soft_timer();
-	  //if (timer_response != SL_STATUS_OK) {
-	  //    LOG_...
-    // }
+	  sl_status_t          timer_response;
+	  timer_response = sl_bt_system_set_soft_timer(SOFT_TIMER_DURATION,1,0);// set to 1s, handler 1 and recurring mode
+	  if (timer_response != SL_STATUS_OK) {
+	      LOG_ERROR("Timer soft error");
+     }
 
 
 
@@ -345,7 +350,7 @@ void displayUpdate()
 	//           the EXTCOMIN input to the LCD. Add that function to gpio.c./.h
 	//           Then uncomment the following line.
 	//
-	//gpioSetDisplayExtcomin(display->last_extcomin_state_high);
+	gpioSetDisplayExtcomin(display->last_extcomin_state_high);
 	
 } // displayUpdate()
 

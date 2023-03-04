@@ -12,8 +12,7 @@
 
 
 void i2cInit();
-void enableI2CGPIO();
-void disableI2CGPIO();
+
 void startMeasurement();
 uint32_t dispTemperature();
 void readMeasurement();

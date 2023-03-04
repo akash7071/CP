@@ -1,7 +1,8 @@
 #include <stdbool.h>
-
+#include "src/lcd.h"
 
 #include "sl_bt_api.h"
+#include "src/ble_device_type.h"
 #include "src/ble.h"
 
 
@@ -19,8 +20,9 @@
 #define SLAVE_LATENCY 4
 #define SUPERVISION_TIMEOUT 150
 
-uint8_t connectionHandle;
+
 uint32_t gattdbData;
+uint32_t actual_temp_local;
 
 // BLE private data
 ble_data_struct_t ble_data; // this is the declaration
@@ -69,6 +71,26 @@ void handle_ble_event(sl_bt_msg_t *evt)
         // Start general advertising and enable connections.
         sc = sl_bt_advertiser_start(ble_data.advertisingSetHandle, sl_bt_advertiser_general_discoverable,
           sl_bt_advertiser_connectable_scannable);
+        if (sc != SL_STATUS_OK)
+          {
+            LOG_ERROR("sl_bt_advertiser_start() returned != 0 status=0x%04x", (unsigned int) sc);
+          }
+
+        displayInit();                                //init the LCD display
+        displayPrintf(DISPLAY_ROW_NAME, "Server",0);  //print server
+        displayPrintf(DISPLAY_ROW_TEMPVALUE, "",0);   //clear temperature row
+        displayPrintf(DISPLAY_ROW_BTADDR, "%0X:%0X:%0X:%0X:%0X:%0X ",
+                       ble_data.myAddress.addr[0],
+                       ble_data.myAddress.addr[1],
+                       ble_data.myAddress.addr[2],
+                       ble_data.myAddress.addr[3],
+                       ble_data.myAddress.addr[4],
+                       ble_data.myAddress.addr[5]);    //print server bt address
+        displayPrintf(DISPLAY_ROW_CONNECTION, "Advertising",0); //print current state
+        displayPrintf(DISPLAY_ROW_ASSIGNMENT, "A6",0);    //print assignment number
+
+
+
 
       }// handle boot event
 
@@ -80,12 +102,26 @@ void handle_ble_event(sl_bt_msg_t *evt)
 
     case sl_bt_evt_connection_opened_id:
       {
-        connectionHandle=evt->data.evt_connection_opened.connection;
+        ble_data.connectionHandle=evt->data.evt_connection_opened.connection;
 
-        sc = sl_bt_connection_set_parameters(connectionHandle,CONNECTION_INTERVAL_MINIMUM,CONNECTION_INTERVAL_MAXIMUM,
+        sc = sl_bt_connection_set_parameters(ble_data.connectionHandle,CONNECTION_INTERVAL_MINIMUM,CONNECTION_INTERVAL_MAXIMUM,
                                         SLAVE_LATENCY, SUPERVISION_TIMEOUT,0,0xffff);
-        sl_bt_advertiser_stop(ble_data.advertisingSetHandle);
+        if (sc != SL_STATUS_OK)
+        {
+          LOG_ERROR("sl_bt_connection_set_parameters() returned != 0 status=0x%04x", (unsigned int) sc);
+        }
+        sc= sl_bt_advertiser_stop(ble_data.advertisingSetHandle);
+        if (sc != SL_STATUS_OK)
+        {
+          LOG_ERROR("sl_bt_advertiser_stop() returned != 0 status=0x%04x", (unsigned int) sc);
+        }
         ble_data.connection_open=1;
+
+        displayPrintf(DISPLAY_ROW_CONNECTION, "Connected",0);//print current state
+
+
+
+
 
         break;
       }// handle open event
@@ -99,7 +135,15 @@ void handle_ble_event(sl_bt_msg_t *evt)
         // Start general advertising and enable connections.
         sc = sl_bt_advertiser_start(ble_data.advertisingSetHandle, sl_bt_advertiser_general_discoverable,
                                     sl_bt_advertiser_connectable_scannable);
+
+        if (sc != SL_STATUS_OK)
+        {
+          LOG_ERROR("sl_bt_advertiser_start() returned != 0 status=0x%04x", (unsigned int) sc);
+        }
         ble_data.connection_open=0;
+
+        displayPrintf(DISPLAY_ROW_TEMPVALUE, "",0);
+        displayPrintf(DISPLAY_ROW_CONNECTION, "Advertising",0);//print current state
 
 
 
@@ -121,7 +165,7 @@ void handle_ble_event(sl_bt_msg_t *evt)
         param_info.latency=(evt->data.evt_connection_parameters.latency);
         param_info.timeout=(evt->data.evt_connection_parameters.timeout);
         param_info.security_mode=(evt->data.evt_connection_parameters.security_mode);
-        LOG_INFO("connection %d interval %d latency %d timeout %d security %d/r/n",param_info.connection,param_info.interval,param_info.latency,param_info.timeout,param_info.security_mode);
+//        LOG_INFO("/rconnection %d interval %d latency %d timeout %d security %d/r/n",param_info.connection,param_info.interval,param_info.latency,param_info.timeout,param_info.security_mode);
         (void) param_info;
       }
 
@@ -130,6 +174,7 @@ void handle_ble_event(sl_bt_msg_t *evt)
 
 
     case sl_bt_evt_gatt_server_characteristic_status_id:
+
       if(evt->data.evt_gatt_server_characteristic_status.status_flags == sl_bt_gatt_server_client_config)
         {
           if(evt->data.evt_gatt_server_characteristic_status.client_config_flags==gatt_indication )
@@ -149,6 +194,15 @@ void handle_ble_event(sl_bt_msg_t *evt)
           ble_data.indication_in_flight=0;
         }
 
+      if(ble_data.ok_to_send_htm_indications)
+        {
+          displayPrintf(DISPLAY_ROW_TEMPVALUE, "Temp=%d C",actual_temp_local);
+        }
+      else
+        {
+          displayPrintf(DISPLAY_ROW_TEMPVALUE, "",0);
+        }
+
         break;
 
     case sl_bt_evt_gatt_server_indication_timeout_id:
@@ -157,6 +211,10 @@ void handle_ble_event(sl_bt_msg_t *evt)
       break;
 
 
+
+    case sl_bt_evt_system_soft_timer_id:
+      displayUpdate();
+      break;
 
   } // end - switch
 
@@ -173,7 +231,7 @@ void updateGATTDB(uint32_t actual_temp)
 
 
 
-
+  actual_temp_local=actual_temp;
   uint8_t htm_temperature_buffer[5];
   uint8_t *p = htm_temperature_buffer;
   uint32_t htm_temperature_flt;
@@ -196,7 +254,7 @@ void updateGATTDB(uint32_t actual_temp)
   if(ble_data.connection_open==1 && ble_data.ok_to_send_htm_indications==1
       && ble_data.indication_in_flight==0)
     {
-      sc = sl_bt_gatt_server_send_indication(connectionHandle,
+      sc = sl_bt_gatt_server_send_indication(ble_data.connectionHandle,
                                                    gattdb_temperature_measurement,
                                                    sizeof(htm_temperature_buffer),
                                                    &htm_temperature_buffer[0]);
