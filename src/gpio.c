@@ -81,9 +81,9 @@ void gpioInit()
 
   // From my A8, use PD10 / Expansion header 7 to monitor timing with a logic analyzer
   // PD10 traces to Expansion header 7
-  GPIO_DriveStrengthSet(PD_port, gpioDriveStrengthWeakAlternateWeak);
-  GPIO_PinModeSet(PD_port, PD_port10, gpioModePushPull, false);
-  gpioPD10Off();
+//  GPIO_DriveStrengthSet(PD_port, gpioDriveStrengthWeakAlternateWeak);
+//  GPIO_PinModeSet(PD_port, PD_port10, gpioModePushPull, false);
+//  gpioPD10Off();
 
 
 

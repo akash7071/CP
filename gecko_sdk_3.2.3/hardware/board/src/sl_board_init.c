@@ -50,7 +50,7 @@ void sl_board_init(void)
   sl_board_default_init();
 
 #if defined(SL_BOARD_ENABLE_VCOM) && SL_BOARD_ENABLE_VCOM
-  sl_board_enable_vcom();
+  //sl_board_enable_vcom();
 #endif
 
 #if defined(SL_BOARD_ENABLE_SENSOR_RHT) && SL_BOARD_ENABLE_SENSOR_RHT

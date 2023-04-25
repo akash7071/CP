@@ -58,6 +58,7 @@
 #include "app_assert.h"
 #include "sl_bluetooth.h"
 #include "gatt_db.h"
+#include <em_usart.h>
 
 
 
@@ -193,8 +194,216 @@ sl_power_manager_on_isr_exit_t app_sleep_on_isr_exit(void)
 #endif // defined(SL_CATALOG_POWER_MANAGER_PRESENT)
 
 
+// Structure Of Cmd and Ack Packets
+typedef struct {
+  uint8_t  Head1;
+  uint8_t  Head2;
+  uint16_t  wDevId;
+  uint32_t   nParam;
+  uint16_t  wCmd;// or nAck
+  uint16_t  wChkSum;
+} SB_OEM_PKT;
+
+int comm_send(uint8_t* pbuf, int nsize, int ntimeout)
+{
+  uint8_t timeout = ntimeout;
+  uint8_t temp;
+
+  while(nsize !=0 && --timeout)
+  {
+    putchar(*pbuf++);
+    nsize --;
+    temp++;
+    //timeout = ntimeout;
+  }
+  return temp;
+}
+
+uint16_t oemp_CalcChkSumOfCmdAckPkt( SB_OEM_PKT* pPkt )
+{
+  uint16_t wChkSum = 0;
+  uint8_t* pBuf = (uint16_t*)pPkt;
+  int i;
+
+  for(i=0;i<(sizeof(SB_OEM_PKT)-2);i++)
+    wChkSum += pBuf[i];
+  return wChkSum;
+}
 
 
+void sendOpenCommand()
+{
+  LOG_INFO("\n\rStart\n\r");
+  SB_OEM_PKT pPkt;
+
+  pPkt.Head1=0x55;
+  pPkt.Head2=0xAA;
+  pPkt.wDevId=0x0001;
+  pPkt.nParam=0x00;
+  pPkt.wCmd=0x01;
+  pPkt.wChkSum=oemp_CalcChkSumOfCmdAckPkt(&pPkt);
+  int sent_bytes = comm_send((uint8_t *)&pPkt, 12, 10000);
+  LOG_INFO("\n\rOpen Sent bytes = %d\n\r", sent_bytes);
+  if(sent_bytes < 12) {
+      LOG_INFO("Cannot send open\n\r");
+  }
+}
+
+
+
+#include "em_device.h"
+#include "em_chip.h"
+#include "em_cmu.h"
+#include "em_gpio.h"
+#include "em_usart.h"
+#include "sl_iostream.h"
+#include "sl_iostream_uart.h"
+#include "sl_iostream_usart.h"
+#include "sl_iostream_usart_vcom_config.h"
+
+#define GT521F52_UART USART0
+#define GT521F52_TX_PORT gpioPortA
+#define GT521F52_TX_PIN 0
+#define GT521F52_RX_PORT gpioPortA
+#define GT521F52_RX_PIN 1
+
+
+void init_uart(void)
+
+
+{
+
+    CMU_ClockEnable(cmuClock_HFPER, true);
+    CMU_ClockEnable(cmuClock_USART0, true);
+    CMU_ClockEnable(cmuClock_GPIO, true);
+
+    USART_InitAsync_TypeDef initAsync = USART_INITASYNC_DEFAULT;
+    initAsync.baudrate = 9600;
+    USART_InitAsync(USART0, &initAsync);
+
+
+
+
+    USART0->ROUTEPEN |= USART_ROUTEPEN_RXPEN | USART_ROUTEPEN_TXPEN;
+    USART0->ROUTELOC0 = (USART0->ROUTELOC0
+                         & ~(_USART_ROUTELOC0_TXLOC_MASK
+                             | _USART_ROUTELOC0_RXLOC_MASK))
+                        | (GT521F52_TX_PIN << _USART_ROUTELOC0_TXLOC_SHIFT)
+                        | (GT521F52_RX_PIN << _USART_ROUTELOC0_RXLOC_SHIFT);
+
+    GPIO_PinModeSet((GPIO_Port_TypeDef)AF_USART0_TX_PORT(GT521F52_TX_PIN), AF_USART0_TX_PIN(GT521F52_TX_PIN), gpioModePushPull, 1);
+    GPIO_PinModeSet((GPIO_Port_TypeDef)AF_USART0_RX_PORT(GT521F52_RX_PIN), AF_USART0_RX_PIN(GT521F52_RX_PIN), gpioModeInput, 0);
+
+}
+
+uint8_t send_cmd(uint8_t* cmd, uint32_t len)
+{
+  uint8_t temp;
+    for (uint32_t i = 0; i < len; i++) {
+        USART_Tx(USART0, cmd[i]);
+        //while (!(USART0->STATUS & USART_STATUS_TXC));
+        temp++;
+    }
+    return temp;
+}
+
+void receive_ack()
+{
+  uint8_t rec_temp[12];
+  memset(rec_temp,0,12);
+  //for(int i=0;i<12;i++)
+    {
+
+      rec_temp[0]=USART_Rx(USART0);
+      if(rec_temp[0]>0)
+               gpioLed0SetOn();
+      //printf("\n\rrec_temp[%d] %d\n\r",i,rec_temp[i]);
+    }
+ for(int j=0;j<100;j++);
+  //return rec_temp;
+}
+
+
+
+
+
+// Size of the buffer for received data
+#define BUFLEN  80
+
+// Receive data buffer
+uint8_t buffer[BUFLEN];
+
+// Current position ins buffer
+uint32_t inpos = 0;
+uint32_t outpos = 0;
+
+// True while receiving data (waiting for CR or BUFLEN characters)
+bool receive = true;
+
+/**************************************************************************//**
+ * @brief
+ *    The USART0 receive interrupt saves incoming characters.
+ *****************************************************************************/
+void USART0_RX_IRQHandler(void)
+{
+  // Get the character just received
+  buffer[inpos] = USART0->RXDATA;
+  if(buffer[inpos]>0)
+    gpioLed0SetOn();
+
+  // Exit loop on new line or buffer full
+  if ((buffer[inpos] != '\r') && (inpos < BUFLEN))
+    inpos++;
+  else
+    receive = false;   // Stop receiving on CR
+}
+
+
+
+
+// Header Of Cmd and Ack Packets
+#define STX1        0x55  //Header1
+#define STX2        0xAA  //Header2
+#define PKT_ERR_START -500
+#define PKT_COMM_ERR  PKT_ERR_START+1
+#define PKT_HDR_ERR   PKT_ERR_START+2
+#define PKT_DEV_ID_ERR  PKT_ERR_START+3
+#define PKT_CHK_SUM_ERR PKT_ERR_START+4
+#define PKT_PARAM_ERR PKT_ERR_START+5
+#define SB_OEM_PKT_SIZE     12
+#define COMM_DEF_TIMEOUT 10000
+#define wDevID 0x0001
+uint32_t gCommTimeOut = COMM_DEF_TIMEOUT;
+
+
+
+int oemp_SendCmdOrAck(uint32_t nParam, uint16_t wCmdOrAck )
+{
+  SB_OEM_PKT pkt;
+  int nSentBytes;
+
+
+  pkt.Head1 = (uint8_t)STX1;
+  pkt.Head2 = (uint8_t)STX2;
+  pkt.wDevId = wDevID;
+  pkt.wCmd = wCmdOrAck;
+  pkt.nParam = nParam;
+  pkt.wChkSum = oemp_CalcChkSumOfCmdAckPkt( &pkt );
+
+  //nSentBytes = comm_send( (uint8_t*)&pkt, SB_OEM_PKT_SIZE, gCommTimeOut );
+  nSentBytes = send_cmd((uint8_t*)&pkt, SB_OEM_PKT_SIZE);
+  if( nSentBytes != SB_OEM_PKT_SIZE )
+    return PKT_COMM_ERR;
+
+  return 0;
+}
+
+void cmosLED(bool state)
+{
+  uint32_t paramLED = 0x00000000;
+  paramLED |= state;
+  oemp_SendCmdOrAck(paramLED, 0x0012);
+}
 
 /**************************************************************************//**
  * Application Init.
@@ -226,10 +435,73 @@ SL_WEAK void app_init(void)
 
 
     gpioInit();                     //Initializing GPIO
+    GPIO_PinOutSet(GT521F52_TX_PORT,GT521F52_TX_PIN);
     oscillatorInit();               //Initializing Oscillators
     timerInit();                    //Initializing letimer
     i2cInit();
     enableI2CGPIO();
+    init_uart();
+    //USART_Tx(USART0, 'a');
+    //putchar('a');
+    //printf("\n\n\n\rstart");
+
+
+    // Enable NVIC USART sources
+
+    NVIC_ClearPendingIRQ(USART0_RX_IRQn);
+    NVIC_EnableIRQ(USART0_RX_IRQn);
+
+
+
+    timerWaitUs_polled(10000);
+    //uint8_t init_cmda[12] = {0x55, 0xAA, 0x01, 0x00, 0x80, 0x25, 0x00, 0x00, 0x04, 0x00, 0xA9, 0x01};
+    oemp_SendCmdOrAck(0x00002580, 0x0004);
+    //send_cmd(init_cmda, sizeof(init_cmda));
+
+    // Enable receive data valid interrupt
+    USART_IntEnable(USART0, USART_IEN_RXDATAV);
+    //receive_ack();
+    timerWaitUs_polled(38000);
+
+    //uint8_t init_cmdb[] = {0x55, 0xAA,   0x01, 0x00,    0x01, 0x00, 0x00, 0x00,    0x01, 0x00,    0x02, 0x01};
+    oemp_SendCmdOrAck(00000001, 0x0001);
+    //send_cmd(init_cmdb, sizeof(init_cmdb));
+    timerWaitUs_polled(76000);
+
+    //uint8_t init_cmdc[] = {0x55, 0xAA,   0x01, 0x00,  0x00, 0x00, 0x00, 0x00,   0x06, 0x00,   0x06, 0x01};
+    oemp_SendCmdOrAck(0x00000000, 0x0006);
+    //send_cmd(init_cmdc, sizeof(init_cmdc));
+    timerWaitUs_polled(100000);
+    timerWaitUs_polled(100000);
+
+
+    //uint8_t init_cmdd[] = {0x55, 0xAA,  0x01, 0x00,  0x01, 0x00, 0x00, 0x00,  0x12, 0x00,   0x13, 0x01};
+    //oemp_SendCmdOrAck(0x00000001, 0x0012);
+    timerWaitUs_polled(100000);
+    cmosLED(1);
+    //send_cmd(init_cmdd, sizeof(init_cmdd));
+    timerWaitUs_polled(100000);
+    timerWaitUs_polled(100000);
+
+
+
+    //uint8_t init_cmde[] = {0x55, 0xAA,   0x01, 0x00,  0x00, 0x00, 0x00, 0x00,   0x26, 0x00, 0x26, 0x01};
+    oemp_SendCmdOrAck(0x00000000, 0x0026);
+    //send_cmd(init_cmde, sizeof(init_cmde));
+    timerWaitUs_polled(1000000);
+    timerWaitUs_polled(100000);
+
+    //uint8_t init_cmdf[] = {0x55, 0xAA, 0x01, 0x00,  0x00, 0x00, 0x00, 0x00,   0x12, 0x00, 0x12, 0x01};
+    //oemp_SendCmdOrAck(0x00000000, 0x0012);
+    timerWaitUs_polled(100000);
+    cmosLED(0);
+    //send_cmd(init_cmdf, sizeof(init_cmdf));
+    timerWaitUs_polled(100000);
+    timerWaitUs_polled(100000);
+
+
+
+
 
 
     NVIC_ClearPendingIRQ (LETIMER0_IRQn); //clear pending interrupts in LETIMER
@@ -390,10 +662,10 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
   // Some events require responses from our application code,
   // and don’t necessarily advance our state machines.
   // For A5 uncomment the next 2 function calls
-   handle_ble_event(evt); // put this code in ble.c/.h
+   //handle_ble_event(evt); // put this code in ble.c/.h
 
   // sequence through states driven by events
-   stateMachine(evt);    // put this code in scheduler.c/.h
+  // stateMachine(evt);    // put this code in scheduler.c/.h
 
 
 } // sl_bt_on_event()

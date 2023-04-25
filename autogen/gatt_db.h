@@ -20,7 +20,11 @@ extern const sli_bt_gattdb_t gattdb;
 #define gattdb_intermediate_temperature       27
 #define gattdb_measurement_interval           30
 #define gattdb_valid_range                    31
-#define gattdb_ota_control                    35
+#define gattdb_employee_id_s                  35
+#define gattdb_employee_id_c                  39
+#define gattdb_last_name                      42
+#define gattdb_presence                       45
+#define gattdb_ota_control                    49
 
 
 #endif // __GATT_DB_H

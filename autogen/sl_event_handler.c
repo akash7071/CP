@@ -23,7 +23,7 @@
 
 void sl_iostream_init_instances(void)
 {
-  sl_iostream_usart_init_instances();
+  //sl_iostream_usart_init_instances();
 }
 
 void sl_platform_init(void)
