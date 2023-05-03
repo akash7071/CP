@@ -62,6 +62,15 @@
 #define DISP_ENABLE 15
 #define EXTCOMIN 13
 
+bool PB0Pressed=0;
+bool PB1Pressed=0;
+bool PB0Released=0;
+bool PB1Released=0;
+bool bothPressed=0;
+
+#define BUTTON0_pin 6
+#define BUTTON1_pin 7
+#define BUTTON_port gpioPortF
 
 
 
@@ -69,21 +78,14 @@
 void gpioInit()
 {
 
-  // Student Edit:
 
-	//GPIO_DriveStrengthSet(LED0_port, gpioDriveStrengthStrongAlternateStrong);
-	//GPIO_DriveStrengthSet(LED0_port, gpioDriveStrengthWeakAlternateWeak);
   GPIO_PinModeSet(LED1_port, LED1_pin, gpioModePushPull, false);
 	GPIO_PinModeSet(LED0_port, LED0_pin, gpioModePushPull, false);
-//	GPIO_PinModeSet(gpioPortC, 10, gpioModePushPull, false);
-//	GPIO_PinModeSet(gpioPortC, 11, gpioModePushPull, false);
-
-
-  // From my A8, use PD10 / Expansion header 7 to monitor timing with a logic analyzer
-  // PD10 traces to Expansion header 7
-//  GPIO_DriveStrengthSet(PD_port, gpioDriveStrengthWeakAlternateWeak);
-//  GPIO_PinModeSet(PD_port, PD_port10, gpioModePushPull, false);
-//  gpioPD10Off();
+  //pushbutton pins
+  GPIO_PinModeSet(BUTTON_port, BUTTON0_pin, gpioModeInputPullFilter, true);
+  GPIO_PinModeSet(BUTTON_port, BUTTON1_pin, gpioModeInputPullFilter, true);
+  GPIO_ExtIntConfig (BUTTON_port, BUTTON0_pin, BUTTON0_pin, true, true, true);
+  GPIO_ExtIntConfig (BUTTON_port, BUTTON1_pin, BUTTON1_pin, true, true, true);
 
 
 
@@ -115,17 +117,7 @@ void gpioLed1SetOff()
 
 
 
-// test code
-void gpioPD10On()
-{
-  GPIO_PinOutSet(PD_port, PD_port10); // routes to Expansion Header pin 7
-}
 
-
-void gpioPD10Off()
-{
-  GPIO_PinOutClear(PD_port, PD_port10); // routes to Expansion Header pin 7
-}
 
 /**************************************************************************//**
  * Function to enable GPIO SCL and SDA and set sensor enable.
@@ -184,6 +176,104 @@ void gpioSetDisplayExtcomin(bool value)
   GPIO_PinModeSet(gpioPortD, EXTCOMIN, gpioModePushPull, value);
   LOG_INFO("\r\n1sec");
 }
+#if DEVICE_IS_BLE_SERVER
+/**************************************************************************//**
+ * IRQ handler for GPIO external interrupt
+ *****************************************************************************/
 
+void GPIO_EVEN_IRQHandler()
+ {
+  //ble_data3=getBleDataPtr();
+
+  int flags=GPIO_IntGetEnabled();
+  GPIO_IntClear(flags);
+
+  if(PB0Pressed==1)
+    {
+      SetPB0Press();
+      PB0Pressed=0;
+
+    }
+  else if(PB0Pressed==0)
+    {
+      SetPB0Release();
+      PB0Pressed=1;
+
+    }
+
+ }
+
+#else
+
+
+/**************************************************************************//**
+ * IRQ handler for GPIO PB0 external interrupt
+ *****************************************************************************/
+
+void GPIO_EVEN_IRQHandler()
+ {
+
+  //ble_data3=getBleDataPtr();
+
+
+  int flags=GPIO_IntGetEnabled();
+  GPIO_IntClear(flags);
+
+  if(PB0Pressed==1)
+    {
+      SetPB0Release();
+      PB0Pressed=0;
+      PB0Released=1;
+
+    }
+  else if(PB0Pressed==0)
+    {
+      SetPB0Press();
+      PB0Pressed=1;
+
+    }
+  if(PB0Released==1 && PB1Released==1 && bothPressed==1)
+    {
+      setEventToggleIndication();
+      bothPressed=0;
+    }
+
+ }
+  /**************************************************************************//**
+   * IRQ handler for GPIO PB1 external interrupt
+   *****************************************************************************/
+
+  void GPIO_ODD_IRQHandler()
+   {
+    //ble_data3=getBleDataPtr();
+
+    int flags=GPIO_IntGetEnabled();
+    GPIO_IntClear(flags);
+
+    if(PB1Pressed==1)
+      {
+        SetPB1Release();
+        PB1Pressed=0;
+        PB1Released=1;
+
+
+      }
+    else if(PB1Pressed==0)
+      {
+        SetPB1Press();
+        PB1Pressed=1;
+
+      }
+
+    if(PB0Pressed==1 && PB1Pressed==1)
+      {
+        bothPressed=1;
+      }
+
+
+   }
+
+
+#endif
 
 

@@ -196,128 +196,92 @@ Summary:
     </characteristic>
   </service>
 
-  <!--Attendance Logger-->
-  <service advertise="true" name="Attendance Logger" requirement="mandatory" sourceId="org.bluetooth.service.user_data" type="primary" uuid="181C">
-    <informativeText>Abstract: This service exposes user-related data in the sports and fitness environment. This allows remote access and update of user data by a Client as well as the synchronization of user data between a Server and a Client.
-Summary: The User Data Service (UDS) exposes user-related data in the sports and fitness environment. This allows remote access and update of user data by a Client as well as the synchronization of user data between a Server and a Client.</informativeText>
+  <!--Employee-->
+  <service advertise="true" id="employee_id" name="Employee" requirement="mandatory" sourceId="" type="primary" uuid="23f4f2b2-49b6-4d49-950f-c257e7b8e123">
 
-    <!--Employee ID-->
-    <characteristic const="false" id="employee_id_s" name="Employee ID" sourceId="org.bluetooth.characteristic.first_name" uuid="2A8A">
-      <informativeText>Abstract: First name of the user. See Note below.</informativeText>
-      <value length="8" type="hex" variable_length="false"/>
+    <!--Attendance Logger-->
+    <characteristic const="false" id="employee_id_s" name="Attendance Logger" sourceId="" uuid="43a8a838-4f55-4e10-8afa-59c0f8d4442b">
+      <value length="1" type="hex" variable_length="false">00</value>
       <properties>
         <read authenticated="false" bonded="true" encrypted="false"/>
         <write authenticated="false" bonded="false" encrypted="false"/>
+        <write_no_response authenticated="false" bonded="false" encrypted="false"/>
         <indicate authenticated="false" bonded="true" encrypted="false"/>
       </properties>
 
-      <!--Client Characteristic Configuration 8-->
-      <descriptor const="false" discoverable="true" id="employee_id_client_characteristic_configuration_0" name="Client Characteristic Configuration 8" sourceId="org.bluetooth.descriptor.gatt.client_characteristic_configuration" uuid="2902">
-        <informativeText>Abstract: 
-        The Client Characteristic Configuration descriptor defines how the characteristic may be configured by a specific client.            
-		
-Summary: 
-        This descriptor shall be persistent across connections for bonded devices.
-        The Client Characteristic Configuration descriptor is unique for each client. A client may read and write this descriptor to determine and set the configuration for that client.
-        Authentication and authorization may be required by the server to write this descriptor.
-        The default value for the Client Characteristic Configuration descriptor is 0x00. Upon connection of non-binded clients, this descriptor is set to the default value.
-		</informativeText>
+      <!--Client Characteristic Configuration 1-->
+      <descriptor const="false" discoverable="true" id="employee_id_server" name="Client Characteristic Configuration 1" sourceId="" uuid="29532097-4959-4e6b-9704-de8eaef32846">
         <properties>
           <read authenticated="false" bonded="false" encrypted="false"/>
           <write authenticated="false" bonded="false" encrypted="false"/>
         </properties>
-        <value length="2" type="hex" variable_length="false"/>
+        <value length="1" type="hex" variable_length="true">00</value>
       </descriptor>
     </characteristic>
   </service>
 
-  <!--Payroll-->
-  <service advertise="true" name="Payroll" requirement="mandatory" sourceId="org.bluetooth.service.user_data" type="primary" uuid="181C">
-    <informativeText>Abstract: This service exposes user-related data in the sports and fitness environment. This allows remote access and update of user data by a Client as well as the synchronization of user data between a Server and a Client.
-Summary: The User Data Service (UDS) exposes user-related data in the sports and fitness environment. This allows remote access and update of user data by a Client as well as the synchronization of user data between a Server and a Client.</informativeText>
+  <!--Manager-->
+  <service advertise="true" id="manager_id" name="Manager" requirement="mandatory" sourceId="" type="primary" uuid="3b14e668-eb36-470e-8abe-f8c630eefd28">
 
-    <!--Employee ID-->
-    <characteristic const="false" id="employee_id_c" name="Employee ID" sourceId="org.bluetooth.characteristic.first_name" uuid="2A8A">
-      <informativeText>Abstract: First name of the user. See Note below.</informativeText>
-      <value length="8" type="hex" variable_length="false"/>
+    <!--Attendance Data-->
+    <characteristic const="false" id="attendance_data_c" name="Attendance Data" sourceId="" uuid="587ddc07-4953-4b87-8978-584702ca95eb">
+      <value length="3" type="hex" variable_length="false">00</value>
       <properties>
-        <read authenticated="false" bonded="true" encrypted="false"/>
+        <read authenticated="false" bonded="false" encrypted="false"/>
         <write authenticated="false" bonded="false" encrypted="false"/>
-        <indicate authenticated="false" bonded="true" encrypted="false"/>
+        <write_no_response authenticated="false" bonded="false" encrypted="false"/>
+        <indicate authenticated="false" bonded="false" encrypted="false"/>
       </properties>
 
-      <!--Client Characteristic Configuration 9-->
-      <descriptor const="false" discoverable="true" id="employee_id_client_characteristic_configuration_9" name="Client Characteristic Configuration 9" sourceId="org.bluetooth.descriptor.gatt.client_characteristic_configuration" uuid="2902">
-        <informativeText>Abstract: 
-        The Client Characteristic Configuration descriptor defines how the characteristic may be configured by a specific client.            
-		
-Summary: 
-        This descriptor shall be persistent across connections for bonded devices.
-        The Client Characteristic Configuration descriptor is unique for each client. A client may read and write this descriptor to determine and set the configuration for that client.
-        Authentication and authorization may be required by the server to write this descriptor.
-        The default value for the Client Characteristic Configuration descriptor is 0x00. Upon connection of non-binded clients, this descriptor is set to the default value.
-		</informativeText>
+      <!--Client Characteristic Configuration 2-->
+      <descriptor const="false" discoverable="true" id="employee_data_client" name="Client Characteristic Configuration 2" sourceId="" uuid="0beda382-0ef8-4675-8683-4109e4d6e755">
         <properties>
           <read authenticated="false" bonded="false" encrypted="false"/>
           <write authenticated="false" bonded="false" encrypted="false"/>
         </properties>
-        <value length="2" type="hex" variable_length="false"/>
+        <value length="3" type="hex" variable_length="false">00</value>
       </descriptor>
     </characteristic>
 
     <!--Wages-->
-    <characteristic const="false" id="last_name" name="Wages" sourceId="org.bluetooth.characteristic.last_name" uuid="2A90">
-      <informativeText>Abstract: Last name of the user. See Note below.</informativeText>
-      <value length="1" type="utf-8" variable_length="false"/>
+    <characteristic const="false" id="wages" name="Wages" sourceId="" uuid="cd13adec-a913-4d57-9595-e0e0b108ae0e">
+      <value length="3" type="hex" variable_length="false">00</value>
       <properties>
-        <read authenticated="false" bonded="false" encrypted="false"/>
+        <read authenticated="false" bonded="true" encrypted="false"/>
         <write authenticated="false" bonded="false" encrypted="false"/>
+        <write_no_response authenticated="false" bonded="false" encrypted="false"/>
+        <indicate authenticated="false" bonded="true" encrypted="false"/>
       </properties>
 
-      <!--Client Characteristic Configuration 10-->
-      <descriptor const="false" discoverable="true" id="employee_id_client_characteristic_configuration_10" name="Client Characteristic Configuration 10" sourceId="org.bluetooth.descriptor.gatt.client_characteristic_configuration" uuid="2902">
-        <informativeText>Abstract: 
-        The Client Characteristic Configuration descriptor defines how the characteristic may be configured by a specific client.            
-		
-Summary: 
-        This descriptor shall be persistent across connections for bonded devices.
-        The Client Characteristic Configuration descriptor is unique for each client. A client may read and write this descriptor to determine and set the configuration for that client.
-        Authentication and authorization may be required by the server to write this descriptor.
-        The default value for the Client Characteristic Configuration descriptor is 0x00. Upon connection of non-binded clients, this descriptor is set to the default value.
-		</informativeText>
+      <!--Client Characteristic Configuration 3-->
+      <descriptor const="false" discoverable="true" id="wages_client" name="Client Characteristic Configuration 3" sourceId="" uuid="c533f14b-0cce-4a4e-a340-98e64f18ce4e">
         <properties>
           <read authenticated="false" bonded="false" encrypted="false"/>
           <write authenticated="false" bonded="false" encrypted="false"/>
         </properties>
-        <value length="2" type="hex" variable_length="false"/>
+        <value length="3" type="hex" variable_length="false">00</value>
       </descriptor>
     </characteristic>
+  </service>
 
-    <!--Presence-->
-    <characteristic const="false" id="presence" name="Presence" sourceId="org.bluetooth.characteristic.email_address" uuid="2A87">
-      <informativeText>Abstract: Email address of the user. See Note below.</informativeText>
-      <value length="1" type="utf-8" variable_length="false"/>
+  <!--ECEN5823 Encryption Test-->
+  <service advertise="true" name="ECEN5823 Encryption Test" requirement="mandatory" sourceId="" type="primary" uuid="00000001-38c8-433e-87ec-652a2d136289">
+
+    <!--ECEN5823 Encrypted Button State-->
+    <characteristic const="false" id="button_state" name="ECEN5823 Encrypted Button State" sourceId="" uuid="00000002-38c8-433e-87ec-652a2d136289">
+      <value length="1" type="hex" variable_length="false">00</value>
       <properties>
-        <read authenticated="false" bonded="false" encrypted="false"/>
-        <write authenticated="false" bonded="false" encrypted="false"/>
+        <read authenticated="false" bonded="true" encrypted="false"/>
+        <indicate authenticated="false" bonded="true" encrypted="false"/>
       </properties>
 
-      <!--Client Characteristic Configuration 11-->
-      <descriptor const="false" discoverable="true" id="employee_id_client_characteristic_configuration_11" name="Client Characteristic Configuration 11" sourceId="org.bluetooth.descriptor.gatt.client_characteristic_configuration" uuid="2902">
-        <informativeText>Abstract: 
-        The Client Characteristic Configuration descriptor defines how the characteristic may be configured by a specific client.            
-		
-Summary: 
-        This descriptor shall be persistent across connections for bonded devices.
-        The Client Characteristic Configuration descriptor is unique for each client. A client may read and write this descriptor to determine and set the configuration for that client.
-        Authentication and authorization may be required by the server to write this descriptor.
-        The default value for the Client Characteristic Configuration descriptor is 0x00. Upon connection of non-binded clients, this descriptor is set to the default value.
-		</informativeText>
+      <!--client_characteristic_configuration_5-->
+      <descriptor const="false" discoverable="true" id="client_characteristic_configuration_5" name="client_characteristic_configuration_5" sourceId="org.bluetooth.descriptor.gatt.client_characteristic_configuration" uuid="2902">
         <properties>
           <read authenticated="false" bonded="false" encrypted="false"/>
           <write authenticated="false" bonded="false" encrypted="false"/>
         </properties>
-        <value length="2" type="hex" variable_length="false"/>
+        <value length="2" type="hex" variable_length="false">00</value>
       </descriptor>
     </characteristic>
   </service>

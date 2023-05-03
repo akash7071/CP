@@ -35,7 +35,7 @@
 sl_status_t sl_board_enable_vcom(void)
 {
 #if defined(SL_BOARD_ENABLE_VCOM_PORT)
-  GPIO_PinModeSet(SL_BOARD_ENABLE_VCOM_PORT, SL_BOARD_ENABLE_VCOM_PIN, gpioModePushPull, 1);
+  //GPIO_PinModeSet(SL_BOARD_ENABLE_VCOM_PORT, SL_BOARD_ENABLE_VCOM_PIN, gpioModePushPull, 1);
   return SL_STATUS_OK;
 #else
   return SL_STATUS_NOT_AVAILABLE;
@@ -45,7 +45,7 @@ sl_status_t sl_board_enable_vcom(void)
 sl_status_t sl_board_disable_vcom(void)
 {
 #if defined(SL_BOARD_ENABLE_VCOM_PORT)
-  GPIO_PinModeSet(SL_BOARD_ENABLE_VCOM_PORT, SL_BOARD_ENABLE_VCOM_PIN, gpioModePushPull, 0);
+  //GPIO_PinModeSet(SL_BOARD_ENABLE_VCOM_PORT, SL_BOARD_ENABLE_VCOM_PIN, gpioModePushPull, 0);
   return SL_STATUS_OK;
 #else
   return SL_STATUS_NOT_AVAILABLE;

@@ -18,19 +18,31 @@
 // Modern C (circa 2021 does it this way)
 // typedef ble_data_struct_t is referred to as an anonymous struct definition
 typedef struct
-{
-    // values that are common to servers and clients
-    bd_addr myAddress;
-    uint8_t myAddressType;
+{// values that are common to servers and clients
+  bd_addr myAddress;
+  uint8_t myAddressType;
 
-    // values unique for server
+  // values unique for server
 
 
-    uint8_t advertisingSetHandle;
-    uint8_t connectionHandle;
-    bool connection_open; // true when in an open connection
-    bool ok_to_send_htm_indications; // true when client enabled indications
-    bool indication_in_flight; // true when an indication is in-flight
+  uint8_t advertisingSetHandle;
+  uint8_t connectionHandle;
+  bool connection_open; // true when in an open connection
+  bool ok_to_send_htm_indications; // true when client enabled indications
+  bool ok_to_send_button_indications; // true when client enabled indications for button
+  bool indication_in_flight; // true when an indication is in-flight
+  bool isBonded;    //true when devices are bonded
+
+
+  uint32_t thermometer_service_handle;
+  uint16_t thermometer_characteristic_handle;
+
+  uint32_t buttonState_service_handle;
+  uint16_t buttonState_characteristic_handle;
+
+  // values unique for client
+
+    bool managerLoggedIn;
 
     // values unique for client
 } ble_data_struct_t;
@@ -38,6 +50,27 @@ typedef struct
 
 // function prototypes
 ble_data_struct_t* getBleDataPtr(void);
+
+
+
+typedef enum {
+  Absent,
+  Clocked_in,
+  Clocked_out,
+}attendance_status_t ;
+
+typedef struct {
+  uint8_t employee_id;
+  uint8_t status;
+  char  attendance_status[11];
+  uint16_t Payroll;
+}employee_report_t;
+
+static employee_report_t employee_report_table[] = {
+    {1, Absent, "Abs", 0},
+    {2, Absent, "Pre", 0},
+    {3, Absent, "N/A", 0},
+};
 
 
 void updateGATTDB(uint32_t actual_temp);

@@ -37,7 +37,7 @@ void LETIMER0_IRQHandler()
       timePassed+=3000;
 //      GPIO_PinOutToggle(5,5);
 
-      setUFEvent();
+      //setUFEvent();
     }
 
 //  if(intSource & LETIMER_IEN_COMP1) // DOS
@@ -46,7 +46,7 @@ void LETIMER0_IRQHandler()
 //      LETIMER_IntClear(LETIMER0,2); // DOS
       LETIMER_IntClear(LETIMER0, LETIMER_IF_COMP1); // DOS: never use constants, use the #defines!!!
 //      GPIO_PinOutToggle(5,4);
-      setCOMP1Event();
+      //setCOMP1Event();
       LETIMER_IntDisable (LETIMER0, LETIMER_IEN_COMP1);
 
     }
@@ -75,7 +75,7 @@ void I2C0_IRQHandler(void)
 
    if (transferStatus == i2cTransferDone)
    {
-       setI2CCompleteEvent();
+       //setI2CCompleteEvent();
 //       LOG_INFO("I");
    }
 
