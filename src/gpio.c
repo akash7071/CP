@@ -34,8 +34,10 @@
 #include <stdbool.h>
 #include "em_gpio.h"
 #include <string.h>
-
+#include "gatt_db.h"
 #include "gpio.h"
+#include "src/scheduler.h"
+
 
 // Include logging specifically for this .c file
 #define INCLUDE_LOG_DEBUG 1
@@ -210,6 +212,10 @@ void GPIO_EVEN_IRQHandler()
  * IRQ handler for GPIO PB0 external interrupt
  *****************************************************************************/
 
+#include "sl_bt_api.h"
+
+#include "src/ble.h"
+ble_data_struct_t *ble_data3;
 void GPIO_EVEN_IRQHandler()
  {
 
@@ -223,6 +229,7 @@ void GPIO_EVEN_IRQHandler()
     {
       SetPB0Release();
       PB0Pressed=0;
+
       PB0Released=1;
 
     }
@@ -230,6 +237,11 @@ void GPIO_EVEN_IRQHandler()
     {
       SetPB0Press();
       PB0Pressed=1;
+//      if(ble_data3->isBonded)
+//      {
+//      sendPayrollIndication();
+//      }
+
 
     }
   if(PB0Released==1 && PB1Released==1 && bothPressed==1)

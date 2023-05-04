@@ -97,7 +97,8 @@ extern uint32_t timePassed;
 
 
 
-
+void capturePrint();
+void identifyFinger();
 
 /**************************************************************************//**
  * Application Init.

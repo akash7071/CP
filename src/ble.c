@@ -32,6 +32,7 @@ uint32_t gattdbData;
 uint32_t actual_temp_local;
 uint8_t state[2];
 int event;
+bool read_in_flight=0;
 // BLE private data
 ble_data_struct_t ble_data; // this is the declaration
 
@@ -49,6 +50,7 @@ ble_data_struct_t* getBleDataPtr()
 
 void handle_ble_event(sl_bt_msg_t *evt)
 {
+  ble_data.myAddressType=1;
   sl_status_t sc; // status code
   switch (SL_BT_MSG_ID(evt->header))
   {
@@ -100,6 +102,7 @@ void handle_ble_event(sl_bt_msg_t *evt)
         displayPrintf(DISPLAY_ROW_NAME, "Attendance");
         displayPrintf(DISPLAY_ROW_BTADDR, "Monitoring");
         displayPrintf(DISPLAY_ROW_ASSIGNMENT, "Server");
+        displayPrintf(DISPLAY_ROW_4, "Advertising",0);//print current state
 
         sl_bt_sm_configure(0x0F, sm_io_capability_displayyesno);
         sl_status_t          timer_response;
@@ -177,6 +180,74 @@ void handle_ble_event(sl_bt_msg_t *evt)
         }
       break;
 
+
+    case sl_bt_evt_gatt_server_attribute_value_id:
+
+      if(evt->data.evt_gatt_server_attribute_value.attribute==gattdb_attendance_data_c)
+        {
+
+
+      employee_report_table[0].status=evt->data.evt_gatt_server_attribute_value.value.data[0];
+      employee_report_table[1].status=evt->data.evt_gatt_server_attribute_value.value.data[1];
+      employee_report_table[2].status=evt->data.evt_gatt_server_attribute_value.value.data[2];
+      for(int i=0; i<3 ;i++)
+         {
+           if(employee_report_table[i].status == 2)
+             {
+               memset(&employee_report_table[i].attendance_status[0], 0, 11);
+               strcpy(employee_report_table[i].attendance_status, "Out");
+             }
+           else if(employee_report_table[i].status == 1)
+             {
+               memset(&employee_report_table[i].attendance_status[0], 0, 11);
+               strcpy(employee_report_table[i].attendance_status, "Ins");
+               //headcount++;
+             }
+           else
+             {
+               memset(&employee_report_table[i].attendance_status[0], 0, 11);
+               strcpy(employee_report_table[i].attendance_status, "Abs");
+             }
+       }
+
+
+       displayPrintf(DISPLAY_ROW_NAME, "Attendance");
+       displayPrintf(DISPLAY_ROW_BTADDR, "Monitoring");
+       displayPrintf(DISPLAY_ROW_3, "Manager Access",0);// change row
+       //displayPrintf(DISPLAY_ROW_4, "Headcount = %d", headcount);
+
+       displayPrintf(DISPLAY_ROW_6,  "EMPID ATTENDANCE    ");
+       displayPrintf(DISPLAY_ROW_7,  "----- ---------- ---");
+       displayPrintf(DISPLAY_ROW_8,  " %d       %s       ", employee_report_table[0].employee_id, employee_report_table[0].attendance_status);
+       displayPrintf(DISPLAY_ROW_9,  " %d       %s       ", employee_report_table[1].employee_id, employee_report_table[1].attendance_status);
+       displayPrintf(DISPLAY_ROW_10, " %d       %s       ", employee_report_table[2].employee_id, employee_report_table[2].attendance_status);
+       displayPrintf(DISPLAY_ROW_ASSIGNMENT, "Server");
+
+        }
+
+      if(evt->data.evt_gatt_server_attribute_value.attribute==gattdb_wages)
+        {
+          employee_report_table[0].Payroll=evt->data.evt_gatt_server_attribute_value.value.data[0];
+          employee_report_table[1].Payroll=evt->data.evt_gatt_server_attribute_value.value.data[1];
+          employee_report_table[2].Payroll=evt->data.evt_gatt_server_attribute_value.value.data[2];
+
+
+
+//          displayPrintf(DISPLAY_ROW_NAME, "Attendance");
+//          displayPrintf(DISPLAY_ROW_BTADDR, "Monitoring");
+//          displayPrintf(DISPLAY_ROW_3, "Manager Access",0);// change row
+//          //displayPrintf(DISPLAY_ROW_4, "Headcount = %d", headcount);
+//
+          displayPrintf(DISPLAY_ROW_6,  "EMPID ATTENDANCE    ");
+          displayPrintf(DISPLAY_ROW_7,  "----- ---------- ---");
+          displayPrintf(DISPLAY_ROW_8,  " %d       %s    %d ", employee_report_table[0].employee_id, employee_report_table[0].attendance_status,employee_report_table[0].Payroll);
+          displayPrintf(DISPLAY_ROW_9,  " %d       %s    %d ", employee_report_table[1].employee_id, employee_report_table[1].attendance_status,employee_report_table[1].Payroll);
+          displayPrintf(DISPLAY_ROW_10, " %d       %s    %d ", employee_report_table[2].employee_id, employee_report_table[2].attendance_status,employee_report_table[2].Payroll);
+//          displayPrintf(DISPLAY_ROW_ASSIGNMENT, "Server");
+        }
+      break;
+
+
     case sl_bt_evt_system_external_signal_id:
       event=evt->data.evt_system_external_signal.extsignals;
       if(event==PB0PRESS || event==PB0RELEASE)
@@ -213,7 +284,7 @@ void handle_ble_event(sl_bt_msg_t *evt)
           if(event==PB0PRESS)
             {
               //displayPrintf(DISPLAY_ROW_9, "Button Pressed",0);//print current state
-              //state[1]=0x01;
+              state[1]=0x01;
               uint8_t temp_btn_state=1;
               sl_status_t sc = sl_bt_gatt_server_write_attribute_value(
               gattdb_button_state, // handle from gatt_db.h
@@ -345,7 +416,7 @@ void handle_ble_event(sl_bt_msg_t *evt)
           }
         }
 
-      if(evt->data.evt_gatt_server_characteristic_status.characteristic==gattdb_employee_id_s)
+      if(evt->data.evt_gatt_server_characteristic_status.characteristic==gattdb_temperature_measurement)
         {
 
           if(evt->data.evt_gatt_server_characteristic_status.status_flags == sl_bt_gatt_server_client_config )
@@ -395,26 +466,26 @@ void handle_ble_event(sl_bt_msg_t *evt)
     case sl_bt_evt_system_soft_timer_id:
       //LOG_INFO("queue_depth %d\n\r",get_queue_depth());
       displayUpdate();
-      uint16_t conHand;
-      size_t conSize;
-      uint8_t conBuff[5];
+//      uint16_t conHand;
+//      size_t conSize;
+//      uint8_t conBuff[5];
 //      if(get_queue_depth()!=0 && ble_data.indication_in_flight==0 &&
 //          (ble_data.ok_to_send_button_indications==1 || ble_data.ok_to_send_htm_indications))
-        {
+//        {
 
 //          LOG_INFO(" Inside dequeue %d\n\r",get_queue_depth());
 //          read_queue(&conHand,&conSize,&conBuff[0]);
-          sc = sl_bt_gatt_server_send_indication(ble_data.connectionHandle,
-                                                 conHand,
-                                                 conSize,
-                                                 &conBuff[0]);
-          if (sc != SL_STATUS_OK)
-            {
-               LOG_ERROR("sl_bt_gatt_server_send_indication in timer() returned != 0 status=0x%04x", (unsigned int) sc);
-            }
-          else
-            ble_data.indication_in_flight=1;
-        }
+//          sc = sl_bt_gatt_server_send_indication(ble_data.connectionHandle,
+//                                                 conHand,
+//                                                 conSize,
+//                                                 &conBuff[0]);
+//          if (sc != SL_STATUS_OK)
+//            {
+//               LOG_ERROR("sl_bt_gatt_server_send_indication in timer() returned != 0 status=0x%04x", (unsigned int) sc);
+//            }
+//          else
+//            ble_data.indication_in_flight=1;
+//        }
 
 
       break;

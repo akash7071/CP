@@ -204,8 +204,8 @@ Summary:
       <value length="1" type="hex" variable_length="false">00</value>
       <properties>
         <read authenticated="false" bonded="true" encrypted="false"/>
-        <write authenticated="false" bonded="false" encrypted="false"/>
-        <write_no_response authenticated="false" bonded="false" encrypted="false"/>
+        <write authenticated="false" bonded="true" encrypted="false"/>
+        <write_no_response authenticated="false" bonded="true" encrypted="false"/>
         <indicate authenticated="false" bonded="true" encrypted="false"/>
       </properties>
 
@@ -215,7 +215,7 @@ Summary:
           <read authenticated="false" bonded="false" encrypted="false"/>
           <write authenticated="false" bonded="false" encrypted="false"/>
         </properties>
-        <value length="1" type="hex" variable_length="true">00</value>
+        <value length="1" type="hex" variable_length="false">00</value>
       </descriptor>
     </characteristic>
   </service>
@@ -227,10 +227,10 @@ Summary:
     <characteristic const="false" id="attendance_data_c" name="Attendance Data" sourceId="" uuid="587ddc07-4953-4b87-8978-584702ca95eb">
       <value length="3" type="hex" variable_length="false">00</value>
       <properties>
-        <read authenticated="false" bonded="false" encrypted="false"/>
-        <write authenticated="false" bonded="false" encrypted="false"/>
-        <write_no_response authenticated="false" bonded="false" encrypted="false"/>
-        <indicate authenticated="false" bonded="false" encrypted="false"/>
+        <read authenticated="false" bonded="true" encrypted="false"/>
+        <write authenticated="false" bonded="true" encrypted="false"/>
+        <write_no_response authenticated="false" bonded="true" encrypted="false"/>
+        <indicate authenticated="false" bonded="true" encrypted="false"/>
       </properties>
 
       <!--Client Characteristic Configuration 2-->
@@ -248,8 +248,8 @@ Summary:
       <value length="3" type="hex" variable_length="false">00</value>
       <properties>
         <read authenticated="false" bonded="true" encrypted="false"/>
-        <write authenticated="false" bonded="false" encrypted="false"/>
-        <write_no_response authenticated="false" bonded="false" encrypted="false"/>
+        <write authenticated="false" bonded="true" encrypted="false"/>
+        <write_no_response authenticated="false" bonded="true" encrypted="false"/>
         <indicate authenticated="false" bonded="true" encrypted="false"/>
       </properties>
 

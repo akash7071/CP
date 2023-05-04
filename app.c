@@ -552,50 +552,7 @@ void fpInit()
 }
 
 
-void identifyFinger()
-{
 
-  USART0->CMD |= 1 <_USART_CMD_CLEARRX_SHIFT;
-  oemp_SendCmdOrAck(0x00000000, 0x0051);
-  //sl_udelay_wait(60000);
-
-
-  for(int i=0;i<12;i++)
-    {
-      //buffer[i] = USART_RxDataGet(USART0);
-      buffer[i] = USART_Rx(USART0);
-    }
-
-  //gpioLed1SetOn();
-  USART0->CMD |= 1 <_USART_CMD_CLEARRX_SHIFT;
-
-  if(buffer[8]==0x30)
-    {
-      fingerID=buffer[4];
-      cmosLED(0);
-
-//      if(fingerID==0x00)
-//        {
-//          gpioLed0SetOn();
-//          gpioLed1SetOff();
-//        }
-//
-//      else if(fingerID==0x01)
-//        {
-//          gpioLed1SetOn();
-//          gpioLed0SetOff();
-//        }
-
-
-    }
-  else
-    {
-      fingerID=0xFF;
-    }
-
-  setIdentifyEvent();
-
-}
 /**************************************************************************//**
  * Application Init.
  *****************************************************************************/
@@ -670,10 +627,44 @@ SL_WEAK void app_init(void)
 
 } // app_init()
 
+void identifyFinger()
+{
 
+  USART0->CMD |= 1 <_USART_CMD_CLEARRX_SHIFT;
+  oemp_SendCmdOrAck(0x00000000, 0x0051);
+  //sl_udelay_wait(60000);
+
+
+  for(int i=0;i<12;i++)
+    {
+      //buffer[i] = USART_RxDataGet(USART0);
+      buffer[i] = USART_Rx(USART0);
+    }
+
+  //gpioLed1SetOn();
+  USART0->CMD |= 1 <_USART_CMD_CLEARRX_SHIFT;
+
+  if(buffer[8]==0x30)
+    {
+      fingerID=buffer[4];
+
+    }
+  else
+    {
+      fingerID=0xFF;
+    }
+
+
+  cmosLED(0);
+  setIdentifyEvent();
+
+}
 
 void capturePrint()
 {
+  uint8_t attempts;
+CAPTUREAGAIN:
+  attempts=0;
   //turn on LED
   cmosLED(1);
 
@@ -686,17 +677,24 @@ void capturePrint()
   //capture prints
   USART0->CMD |= 1 <_USART_CMD_CLEARRX_SHIFT;
   oemp_SendCmdOrAck(0x00000000, 0x0060);
-  sl_udelay_wait(60000);
+  //sl_udelay_wait(60000);
   receiveAck=receive_ack(12);
-  sl_udelay_wait(10000);
+  //sl_udelay_wait(10000);
 
   //if no finger pressed, repeat above step
 
   while( receiveAck!=0x30)
     {
       oemp_SendCmdOrAck(0x00000000, 0x0060);
-      sl_udelay_wait(30000);
+      //sl_udelay_wait(30000);
       receiveAck=receive_ack(12);
+      attempts++;
+      if(attempts>15)
+        {
+
+          cmosLED(0);
+          goto CAPTUREAGAIN;
+        }
     }
   setCaptureEvent();
 
