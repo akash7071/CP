@@ -63,13 +63,13 @@ GATT_DATA(sli_bt_gattdb_attribute_chrvalue_t gattdb_attribute_field_43) = {
 };
 GATT_DATA(sli_bt_gattdb_attribute_chrvalue_t gattdb_attribute_field_41) = {
   .properties = 0x0a,
-  .max_len = 3,
-  .data = { 0x00, 0x00, 0x00, },
+  .max_len = 6,
+  .data = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, },
 };
 GATT_DATA(sli_bt_gattdb_attribute_chrvalue_t gattdb_attribute_field_39) = {
   .properties = 0x2e,
-  .max_len = 3,
-  .data = { 0x00, 0x00, 0x00, },
+  .max_len = 6,
+  .data = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, },
 };
 GATT_DATA(const sli_bt_gattdb_value_t gattdb_attribute_field_37) = {
   .len = 16,

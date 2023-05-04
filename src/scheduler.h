@@ -11,7 +11,6 @@
 #include "sl_bt_api.h"
 
 
-
 void schedulerSetEvent3s();
 uint8_t getEvent();
 void setUFEvent();

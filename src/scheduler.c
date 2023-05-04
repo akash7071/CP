@@ -50,7 +50,7 @@ uint32_t temperature=0;
 
 uint16_t eventLog=0;
 
-uint8_t headcount=0;
+
 
 extern uint8_t receiveAck;
 extern uint8_t fingerID;
@@ -277,9 +277,10 @@ void setIdentifyEvent()
 
 void sendPayrollIndication()
 {
-  uint8_t payRollID=0x01;
+  gpioLed1SetOff();
+  uint8_t payRollID=0x05;
   sl_status_t sc = sl_bt_gatt_server_write_attribute_value(
-      gattdb_wages, // handle from gatt_db.h
+      gattdb_temperature_measurement, // handle from gatt_db.h
     0,                              // offset
     sizeof(payRollID), // length
     &payRollID);    // pointer to buffer where data is
@@ -291,12 +292,12 @@ void sendPayrollIndication()
       && ble_data2->indication_in_flight==0 && ble_data2->ok_to_send_htm_indications)
     {
       sc = sl_bt_gatt_server_send_indication(ble_data2->connectionHandle,
-                                             gattdb_wages,
+                                             gattdb_temperature_measurement,
                                                    sizeof(payRollID),
                                                    &payRollID);
       ble_data2->indication_in_flight=1;
       if (sc != SL_STATUS_OK)
-               LOG_ERROR("GATT INDICATION WRITE ERROR");
+        gpioLed0SetOff();
 
     }
 }
@@ -353,7 +354,7 @@ void sendEmployeeIndication(uint8_t fingerID)
 
     }
 }
-
+uint8_t headcount=0;
 void payRollDisplay()
 {
 
@@ -401,7 +402,7 @@ void employeeDataDisplay()
   sl_udelay_wait(1000000);
   sl_udelay_wait(1000000);
 
-  headcount=0;
+
   size_t value_len_s =0;
   uint8_t tempEmployeeID[3];
   sl_status_t sc = sl_bt_gatt_server_read_attribute_value(gattdb_attendance_data_c,
@@ -463,7 +464,7 @@ void employeeDataDisplay()
   displayPrintf(DISPLAY_ROW_10, " %d       %s       ", employee_report_table[2].employee_id, employee_report_table[2].attendance_status);
   displayPrintf(DISPLAY_ROW_ASSIGNMENT, "Server");
 }
-
+//uint8_t inPayroll=0;
 
 
 void stateMachine(sl_bt_msg_t *evt)
@@ -485,8 +486,33 @@ void stateMachine(sl_bt_msg_t *evt)
 
 
                   capturePrint();                 //start capturing finger prints
+                  displayPrintf(DISPLAY_ROW_3, "Ready",0);
                   nextState=WAIT_FOR_FINGERPRINT;
+                  if(!GPIO_PinInGet(5,6))
+                  {
+                  if(ble_data2->managerLoggedIn)
+                    {
+                      ble_data2 -> payroll =1;
+                      //displayPrintf(2,"in here", 0);
+              //                      employee_report_table[0].Payroll=evt->data.evt_gatt_server_attribute_value.value.data[0];
+              //                      employee_report_table[1].Payroll=evt->data.evt_gatt_server_attribute_value.value.data[1];
+              //                      employee_report_table[2].Payroll=evt->data.evt_gatt_server_attribute_value.value.data[2];
 
+
+
+              //          displayPrintf(DISPLAY_ROW_NAME, "Attendance");
+              //          displayPrintf(DISPLAY_ROW_BTADDR, "Monitoring");
+              //          displayPrintf(DISPLAY_ROW_3, "Manager Access",0);// change row
+              //          //displayPrintf(DISPLAY_ROW_4, "Headcount = %d", headcount);
+              //
+                      displayPrintf(DISPLAY_ROW_6,  "EMPID ATTENDANCE    ");
+                      displayPrintf(DISPLAY_ROW_7,  "----- ---------- ---");
+                      displayPrintf(DISPLAY_ROW_8,  " %d       %s    %d ", employee_report_table[0].employee_id, employee_report_table[0].attendance_status,employee_report_table[0].Payroll);
+                      displayPrintf(DISPLAY_ROW_9,  " %d       %s    %d ", employee_report_table[1].employee_id, employee_report_table[1].attendance_status,employee_report_table[1].Payroll);
+                      displayPrintf(DISPLAY_ROW_10, " %d       %s    %d ", employee_report_table[2].employee_id, employee_report_table[2].attendance_status,employee_report_table[2].Payroll);
+              //          displayPrintf(DISPLAY_ROW_ASSIGNMENT, "Server");
+                    }
+                                    }
 
               break;
 
@@ -500,6 +526,38 @@ void stateMachine(sl_bt_msg_t *evt)
                   nextState=IDENTIFY_FINGERPRINT;
 
                 }
+//              else if((event == 8) || ( event == 16))
+//                {
+//                  displayPrintf(2,"event 8 16", 0);
+
+              if(!GPIO_PinInGet(5,6))
+                  {
+
+                  if(ble_data2->managerLoggedIn)
+                    {ble_data2 -> payroll =1;
+                      //displayPrintf(2,"in here", 0);
+              //                      employee_report_table[0].Payroll=evt->data.evt_gatt_server_attribute_value.value.data[0];
+              //                      employee_report_table[1].Payroll=evt->data.evt_gatt_server_attribute_value.value.data[1];
+              //                      employee_report_table[2].Payroll=evt->data.evt_gatt_server_attribute_value.value.data[2];
+
+
+
+              //          displayPrintf(DISPLAY_ROW_NAME, "Attendance");
+              //          displayPrintf(DISPLAY_ROW_BTADDR, "Monitoring");
+              //          displayPrintf(DISPLAY_ROW_3, "Manager Access",0);// change row
+              //          //displayPrintf(DISPLAY_ROW_4, "Headcount = %d", headcount);
+              //
+                      displayPrintf(DISPLAY_ROW_6,  "EMPID ATTENDANCE    ");
+                      displayPrintf(DISPLAY_ROW_7,  "----- ---------- ---");
+                      displayPrintf(DISPLAY_ROW_8,  " %d       %s    %d ", employee_report_table[0].employee_id, employee_report_table[0].attendance_status,employee_report_table[0].Payroll);
+                      displayPrintf(DISPLAY_ROW_9,  " %d       %s    %d ", employee_report_table[1].employee_id, employee_report_table[1].attendance_status,employee_report_table[1].Payroll);
+                      displayPrintf(DISPLAY_ROW_10, " %d       %s    %d ", employee_report_table[2].employee_id, employee_report_table[2].attendance_status,employee_report_table[2].Payroll);
+              //          displayPrintf(DISPLAY_ROW_ASSIGNMENT, "Server");
+                    }
+                  }
+
+
+
               break;
 
 
@@ -514,6 +572,7 @@ void stateMachine(sl_bt_msg_t *evt)
                     {
                       displayPrintf(DISPLAY_ROW_3, "Ready",0);
                       displayPrintf(DISPLAY_ROW_4, "", 0);
+                      displayPrintf(5, " ", 0);
                       displayPrintf(DISPLAY_ROW_6, "    ",0);
                       displayPrintf(DISPLAY_ROW_7, "",0);
                       displayPrintf(DISPLAY_ROW_8, "", 0);
@@ -522,6 +581,7 @@ void stateMachine(sl_bt_msg_t *evt)
 
                       ble_data2->managerLoggedIn=0;
                       nextState=IDLE;
+                      ble_data2 -> payroll =0;
                     }
 
                   //log in
@@ -538,7 +598,7 @@ void stateMachine(sl_bt_msg_t *evt)
 
                 }
               //labor access
-              else if( (event == 2) && (fingerID<=0x03) && (fingerID!=0x03))
+              else if( (event == 2) && (fingerID<=0x03))
                 {
                   if(ble_data2->managerLoggedIn)
                     {
@@ -556,13 +616,38 @@ void stateMachine(sl_bt_msg_t *evt)
                   displayPrintf(DISPLAY_ROW_4, "Try Again",0);
                   nextState=IDLE;
                 }
+              if(!GPIO_PinInGet(5,6))
+                                {
+
+                                if(ble_data2->managerLoggedIn)
+                                  {ble_data2 -> payroll =1;
+                                    //displayPrintf(2,"in here", 0);
+                            //                      employee_report_table[0].Payroll=evt->data.evt_gatt_server_attribute_value.value.data[0];
+                            //                      employee_report_table[1].Payroll=evt->data.evt_gatt_server_attribute_value.value.data[1];
+                            //                      employee_report_table[2].Payroll=evt->data.evt_gatt_server_attribute_value.value.data[2];
+
+
+
+                            //          displayPrintf(DISPLAY_ROW_NAME, "Attendance");
+                            //          displayPrintf(DISPLAY_ROW_BTADDR, "Monitoring");
+                            //          displayPrintf(DISPLAY_ROW_3, "Manager Access",0);// change row
+                            //          //displayPrintf(DISPLAY_ROW_4, "Headcount = %d", headcount);
+                            //
+                                    displayPrintf(DISPLAY_ROW_6,  "EMPID ATTENDANCE    ");
+                                    displayPrintf(DISPLAY_ROW_7,  "----- ---------- ---");
+                                    displayPrintf(DISPLAY_ROW_8,  " %d       %s    %d ", employee_report_table[0].employee_id, employee_report_table[0].attendance_status,employee_report_table[0].Payroll);
+                                    displayPrintf(DISPLAY_ROW_9,  " %d       %s    %d ", employee_report_table[1].employee_id, employee_report_table[1].attendance_status,employee_report_table[1].Payroll);
+                                    displayPrintf(DISPLAY_ROW_10, " %d       %s    %d ", employee_report_table[2].employee_id, employee_report_table[2].attendance_status,employee_report_table[2].Payroll);
+                            //          displayPrintf(DISPLAY_ROW_ASSIGNMENT, "Server");
+                                  }
+                                }
               break;
 
 
             case PAYROLL_DISPLAY:
               if((SL_BT_MSG_ID(evt->header)==sl_bt_evt_gatt_server_attribute_value_id))
                 {
-
+                  displayPrintf(DISPLAY_ROW_4, "",0);
                   nextState=IDLE;
                 }
               break;
@@ -579,8 +664,7 @@ void stateMachine(sl_bt_msg_t *evt)
                   sl_udelay_wait(SECOND);
                   sl_udelay_wait(SECOND);
                   displayPrintf(DISPLAY_ROW_3, "",0);
-                  sl_udelay_wait(SECOND);
-                  sl_udelay_wait(SECOND);
+                  sl_udelay_wait(1000);
                   displayPrintf(DISPLAY_ROW_3, "Ready",0);
                   nextState=IDLE;
                 }

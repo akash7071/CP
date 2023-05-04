@@ -32,7 +32,8 @@ typedef struct
   bool ok_to_send_button_indications; // true when client enabled indications for button
   bool indication_in_flight; // true when an indication is in-flight
   bool isBonded;    //true when devices are bonded
-
+  bool payroll;
+  uint8_t headcount;
 
   uint32_t thermometer_service_handle;
   uint16_t thermometer_characteristic_handle;

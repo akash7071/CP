@@ -225,7 +225,7 @@ Summary:
 
     <!--Attendance Data-->
     <characteristic const="false" id="attendance_data_c" name="Attendance Data" sourceId="" uuid="587ddc07-4953-4b87-8978-584702ca95eb">
-      <value length="3" type="hex" variable_length="false">00</value>
+      <value length="6" type="hex" variable_length="false">00</value>
       <properties>
         <read authenticated="false" bonded="true" encrypted="false"/>
         <write authenticated="false" bonded="true" encrypted="false"/>
@@ -239,7 +239,7 @@ Summary:
           <read authenticated="false" bonded="false" encrypted="false"/>
           <write authenticated="false" bonded="false" encrypted="false"/>
         </properties>
-        <value length="3" type="hex" variable_length="false">00</value>
+        <value length="6" type="hex" variable_length="false">00</value>
       </descriptor>
     </characteristic>
 
