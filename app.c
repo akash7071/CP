@@ -205,20 +205,20 @@ typedef struct {
   uint16_t  wChkSum;
 } SB_OEM_PKT;
 
-int comm_send(uint8_t* pbuf, int nsize, int ntimeout)
-{
-  uint8_t timeout = ntimeout;
-  uint8_t temp;
-
-  while(nsize !=0 && --timeout)
-  {
-    putchar(*pbuf++);
-    nsize --;
-    temp++;
-    //timeout = ntimeout;
-  }
-  return temp;
-}
+//int comm_send(uint8_t* pbuf, int nsize, int ntimeout)
+//{
+//  uint8_t timeout = ntimeout;
+//  uint8_t temp;
+//
+//  while(nsize !=0 && --timeout)
+//  {
+//    putchar(*pbuf++);
+//    nsize --;
+//    temp++;
+//    //timeout = ntimeout;
+//  }
+//  return temp;
+//}
 
 uint16_t oemp_CalcChkSumOfCmdAckPkt( SB_OEM_PKT* pPkt )
 {
@@ -232,23 +232,23 @@ uint16_t oemp_CalcChkSumOfCmdAckPkt( SB_OEM_PKT* pPkt )
 }
 
 
-void sendOpenCommand()
-{
-  LOG_INFO("\n\rStart\n\r");
-  SB_OEM_PKT pPkt;
-
-  pPkt.Head1=0x55;
-  pPkt.Head2=0xAA;
-  pPkt.wDevId=0x0001;
-  pPkt.nParam=0x00;
-  pPkt.wCmd=0x01;
-  pPkt.wChkSum=oemp_CalcChkSumOfCmdAckPkt(&pPkt);
-  int sent_bytes = comm_send((uint8_t *)&pPkt, 12, 10000);
-  LOG_INFO("\n\rOpen Sent bytes = %d\n\r", sent_bytes);
-  if(sent_bytes < 12) {
-      LOG_INFO("Cannot send open\n\r");
-  }
-}
+//void sendOpenCommand()
+//{
+//  LOG_INFO("\n\rStart\n\r");
+//  SB_OEM_PKT pPkt;
+//
+//  pPkt.Head1=0x55;
+//  pPkt.Head2=0xAA;
+//  pPkt.wDevId=0x0001;
+//  pPkt.nParam=0x00;
+//  pPkt.wCmd=0x01;
+//  pPkt.wChkSum=oemp_CalcChkSumOfCmdAckPkt(&pPkt);
+//  int sent_bytes = comm_send((uint8_t *)&pPkt, 12, 10000);
+//  LOG_INFO("\n\rOpen Sent bytes = %d\n\r", sent_bytes);
+//  if(sent_bytes < 12) {
+//      LOG_INFO("Cannot send open\n\r");
+//  }
+//}
 
 
 
@@ -711,75 +711,6 @@ SL_WEAK void app_process_action(void)
 {
 
 
-  //init fp sensor
-
-
-
-//  //turn led on
-//  USART0->CMD |= 1 <_USART_CMD_CLEARRX_SHIFT;
-//  cmosLED(1);
-//  receive_ack(12);
-//  sl_udelay_wait(100000);
-//
-//
-//  //get enroll count
-//  USART0->CMD |= 1 <_USART_CMD_CLEARRX_SHIFT;
-//  oemp_SendCmdOrAck(0x00000000, 0x0020);
-//  receive_ack(12);
-//  sl_udelay_wait(100000);
-//
-//
-//  //capture enrolled prints count
-//  USART0->CMD |= 1 <_USART_CMD_CLEARRX_SHIFT;
-//  oemp_SendCmdOrAck(0x00000000, 0x0060);
-//  sl_udelay_wait(60000);
-//  receiveAck=receive_ack(12);
-//  sl_udelay_wait(10000);
-//
-//  //if no finger pressed, repeat above step
-//  if( receiveAck!=0x30)
-//  //while( receiveAck!=0x30)
-//    {
-//      oemp_SendCmdOrAck(0x00000000, 0x0060);
-//      sl_udelay_wait(60000);
-//      receiveAck=receive_ack(12);
-//    }
-//  //sl_udelay_wait(60000);
-
-
-  //if finger pressed, send for identification
-//  USART0->CMD |= 1 <_USART_CMD_CLEARRX_SHIFT;
-//  oemp_SendCmdOrAck(0x00000000, 0x0051);
-//  sl_udelay_wait(60000);
-//  fingerID=identifyFinger();
-//
-//
-//
-//  //control gpio based on finger ID
-//  if(fingerID==0x00)
-//    {
-//      gpioLed0SetOn();
-//      gpioLed1SetOff();
-//    }
-//  else if(fingerID==0x01)
-//    {
-//      gpioLed1SetOn();
-//      gpioLed0SetOff();
-//    }
-//  else
-//    {
-//      gpioLed1SetOff();
-//      gpioLed0SetOff();
-//    }
-//
-//  sl_udelay_wait(100000);
-//
-//
-//
-//  //turn led off after finger identified
-//  cmosLED(0);
-
-
 
 
 
@@ -804,17 +735,13 @@ SL_WEAK void app_process_action(void)
 void sl_bt_on_event(sl_bt_msg_t *evt)
 {
 
-  // Just a trick to hide a compiler warning about unused input parameter evt.
-  (void) evt;
+   (void) evt;
 
-  // For A5 onward:
-  // Some events require responses from our application code,
-  // and don’t necessarily advance our state machines.
-  // For A5 uncomment the next 2 function calls
-   handle_ble_event(evt); // put this code in ble.c/.h
+
+   handle_ble_event(evt);
 
   // sequence through states driven by events
-   stateMachine(evt);    // put this code in scheduler.c/.h
+   stateMachine(evt);
 
 
 } // sl_bt_on_event()

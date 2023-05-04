@@ -145,8 +145,9 @@ void handle_ble_event(sl_bt_msg_t *evt)
         displayPrintf(DISPLAY_ROW_4, "Connected",0);//print current state
         //sl_bt_sm_configure(0b00001111, sm_io_capability_displayyesno);
 
-        break;
+
       }// handle open event
+      break;
 
     case sl_bt_evt_sm_confirm_bonding_id:
       ble_data.connectionHandle=evt->data.evt_sm_confirm_bonding.connection;
@@ -229,27 +230,27 @@ void handle_ble_event(sl_bt_msg_t *evt)
        ble_data.headcount=0;
         }
 
-//      if(evt->data.evt_gatt_server_attribute_value.attribute==gattdb_wages)
-//        {
-//          employee_report_table[0].Payroll=evt->data.evt_gatt_server_attribute_value.value.data[0];
-//          employee_report_table[1].Payroll=evt->data.evt_gatt_server_attribute_value.value.data[1];
-//          employee_report_table[2].Payroll=evt->data.evt_gatt_server_attribute_value.value.data[2];
+      if(evt->data.evt_gatt_server_attribute_value.attribute==gattdb_wages)
+        {
+          employee_report_table[0].Payroll=evt->data.evt_gatt_server_attribute_value.value.data[0];
+          employee_report_table[1].Payroll=evt->data.evt_gatt_server_attribute_value.value.data[1];
+          employee_report_table[2].Payroll=evt->data.evt_gatt_server_attribute_value.value.data[2];
+
+
+
+//          displayPrintf(DISPLAY_ROW_NAME, "Attendance");
+//          displayPrintf(DISPLAY_ROW_BTADDR, "Monitoring");
+//          displayPrintf(DISPLAY_ROW_3, "Manager Access",0);// change row
+          displayPrintf(DISPLAY_ROW_4, "Headcount = %d", ble_data.headcount);
 //
-//
-//
-////          displayPrintf(DISPLAY_ROW_NAME, "Attendance");
-////          displayPrintf(DISPLAY_ROW_BTADDR, "Monitoring");
-////          displayPrintf(DISPLAY_ROW_3, "Manager Access",0);// change row
-//          displayPrintf(DISPLAY_ROW_4, "Headcount = %d", ble_data.headcount);
-////
-//          displayPrintf(DISPLAY_ROW_6,  "EMPID ATTENDANCE    ");
-//          displayPrintf(DISPLAY_ROW_7,  "----- ---------- ---");
-//          displayPrintf(DISPLAY_ROW_8,  " %d       %s    %d ", employee_report_table[0].employee_id, employee_report_table[0].attendance_status,employee_report_table[0].Payroll);
-//          displayPrintf(DISPLAY_ROW_9,  " %d       %s    %d ", employee_report_table[1].employee_id, employee_report_table[1].attendance_status,employee_report_table[1].Payroll);
-//          displayPrintf(DISPLAY_ROW_10, " %d       %s    %d ", employee_report_table[2].employee_id, employee_report_table[2].attendance_status,employee_report_table[2].Payroll);
-////          displayPrintf(DISPLAY_ROW_ASSIGNMENT, "Server");
-//          ble_data.headcount=0;
-  //      }
+          displayPrintf(DISPLAY_ROW_6,  "EMPID ATTENDANCE    ");
+          displayPrintf(DISPLAY_ROW_7,  "----- ---------- ---");
+          displayPrintf(DISPLAY_ROW_8,  " %d       %s    %d ", employee_report_table[0].employee_id, employee_report_table[0].attendance_status,employee_report_table[0].Payroll);
+          displayPrintf(DISPLAY_ROW_9,  " %d       %s    %d ", employee_report_table[1].employee_id, employee_report_table[1].attendance_status,employee_report_table[1].Payroll);
+          displayPrintf(DISPLAY_ROW_10, " %d       %s    %d ", employee_report_table[2].employee_id, employee_report_table[2].attendance_status,employee_report_table[2].Payroll);
+//          displayPrintf(DISPLAY_ROW_ASSIGNMENT, "Server");
+          ble_data.headcount=0;
+        }
       break;
 
 
@@ -257,9 +258,7 @@ void handle_ble_event(sl_bt_msg_t *evt)
       event=evt->data.evt_system_external_signal.extsignals;
       if(event==PB0PRESS || event==PB0RELEASE)
         {
-          //displayPrintf(5,"ext event", 0);
 
-      //LOG_INFO("inside external signal\n\r");
 
 
 
@@ -305,55 +304,55 @@ void handle_ble_event(sl_bt_msg_t *evt)
                 }
 
             }
-      }
-  }
-//          else if(event==PB0RELEASE)
-//            {
-//              //displayPrintf(DISPLAY_ROW_9, "Button Released",0);//print current state
-//              state[1]=0x00;
-//              uint8_t temp_btn_state=0;
-//              sl_status_t sc = sl_bt_gatt_server_write_attribute_value(
-//             gattdb_button_state, // handle from gatt_db.h
-//             0,                              // offset
-//             1, // length
-//             &temp_btn_state);    // pointer to buffer where data is
-//             if (sc != SL_STATUS_OK)
-//               {
-//                  LOG_ERROR("sl_bt_gatt_server_write_attribute_value() returned != 0 status=0x%04x", (unsigned int) sc);
-//               }
- //           }
+        }
+        }
+          else if(event==PB0RELEASE)
+            {
+              //displayPrintf(DISPLAY_ROW_9, "Button Released",0);//print current state
+              state[1]=0x00;
+              uint8_t temp_btn_state=0;
+              sl_status_t sc = sl_bt_gatt_server_write_attribute_value(
+             gattdb_button_state, // handle from gatt_db.h
+             0,                              // offset
+             1, // length
+             &temp_btn_state);    // pointer to buffer where data is
+             if (sc != SL_STATUS_OK)
+               {
+                  LOG_ERROR("sl_bt_gatt_server_write_attribute_value() returned != 0 status=0x%04x", (unsigned int) sc);
+               }
+            }
 
 
-//          if(ble_data.connection_open==1 && ble_data.ok_to_send_button_indications==1 &&
-//             ble_data.isBonded==1 && ble_data.indication_in_flight==0)
-//             {
-//
-//               state[1]=0x01;
-//               //sendPayrollIndication();
-//               sc = sl_bt_gatt_server_send_indication(ble_data.connectionHandle,
-//                                                      gattdb_button_state,
-//                                                      sizeof(state),
-//                                                      &state[0]);
-//               if (sc != SL_STATUS_OK)
-//                {
-//                   LOG_ERROR("sl_bt_advertiser_start release() returned != 0 status=0x%04x", (unsigned int) sc);
-//                }
-//
-//               else
-//                 ble_data.indication_in_flight=1;
-//             }
-//           else if(ble_data.connection_open==1 && ble_data.ok_to_send_button_indications==1 &&
-//                   ble_data.isBonded==1 && ble_data.indication_in_flight==1)
-//             {
-//               //LOG_INFO("write queue in button\n\r");
-//               //write_queue(gattdb_button_state,sizeof(state),state);
-//             }
-//
-//          }
-//
-//
-//
-//        }
+          if(ble_data.connection_open==1 && ble_data.ok_to_send_button_indications==1 &&
+             ble_data.isBonded==1 && ble_data.indication_in_flight==0)
+             {
+
+               state[1]=0x01;
+               //sendPayrollIndication();
+               sc = sl_bt_gatt_server_send_indication(ble_data.connectionHandle,
+                                                      gattdb_button_state,
+                                                      sizeof(state),
+                                                      &state[0]);
+               if (sc != SL_STATUS_OK)
+                {
+                   LOG_ERROR("sl_bt_advertiser_start release() returned != 0 status=0x%04x", (unsigned int) sc);
+                }
+
+               else
+                 ble_data.indication_in_flight=1;
+             }
+           else if(ble_data.connection_open==1 && ble_data.ok_to_send_button_indications==1 &&
+                   ble_data.isBonded==1 && ble_data.indication_in_flight==1)
+             {
+               //LOG_INFO("write queue in button\n\r");
+               //write_queue(gattdb_button_state,sizeof(state),state);
+             }
+
+
+
+
+
+
       break;
 
 
@@ -477,31 +476,8 @@ void handle_ble_event(sl_bt_msg_t *evt)
 ////////////////////common/////////////
 
     case sl_bt_evt_system_soft_timer_id:
-      //LOG_INFO("queue_depth %d\n\r",get_queue_depth());
-      displayUpdate();
-//      uint16_t conHand;
-//      size_t conSize;
-//      uint8_t conBuff[5];
-//      if(get_queue_depth()!=0 && ble_data.indication_in_flight==0 &&
-//          (ble_data.ok_to_send_button_indications==1 || ble_data.ok_to_send_htm_indications))
-//        {
-
-//          LOG_INFO(" Inside dequeue %d\n\r",get_queue_depth());
-//          read_queue(&conHand,&conSize,&conBuff[0]);
-//          sc = sl_bt_gatt_server_send_indication(ble_data.connectionHandle,
-//                                                 conHand,
-//                                                 conSize,
-//                                                 &conBuff[0]);
-//          if (sc != SL_STATUS_OK)
-//            {
-//               LOG_ERROR("sl_bt_gatt_server_send_indication in timer() returned != 0 status=0x%04x", (unsigned int) sc);
-//            }
-//          else
-//            ble_data.indication_in_flight=1;
-//        }
-
-
-      break;
+         displayUpdate();
+         break;
 
 #endif
 
@@ -512,47 +488,5 @@ void handle_ble_event(sl_bt_msg_t *evt)
 
 
 
-
-void updateGATTDB(uint32_t actual_temp)
-{
-
-
-
-
-
-  actual_temp_local=actual_temp;
-  uint8_t htm_temperature_buffer[5];
-  uint8_t *p = htm_temperature_buffer;
-  uint32_t htm_temperature_flt;
-  uint8_t flags =0x00;
-
-  UINT8_TO_BITSTREAM(p, flags);
-  htm_temperature_flt = UINT32_TO_FLOAT(actual_temp*1000, -3);
-  UINT32_TO_BITSTREAM(p, htm_temperature_flt);
-
-
-  sl_status_t sc = sl_bt_gatt_server_write_attribute_value(
-    gattdb_temperature_measurement, // handle from gatt_db.h
-    0,                              // offset
-    sizeof(htm_temperature_buffer), // length
-    &htm_temperature_buffer[0]);    // pointer to buffer where data is
-
-  if (sc != SL_STATUS_OK)
-           LOG_ERROR("GATT DB WRITE ERROR");
-
-  if(ble_data.connection_open==1 && ble_data.ok_to_send_htm_indications==1
-      && ble_data.indication_in_flight==0)
-    {
-      sc = sl_bt_gatt_server_send_indication(ble_data.connectionHandle,
-                                                   gattdb_temperature_measurement,
-                                                   sizeof(htm_temperature_buffer),
-                                                   &htm_temperature_buffer[0]);
-      ble_data.indication_in_flight=1;
-      if (sc != SL_STATUS_OK)
-               LOG_ERROR("GATT INDICATION WRITE ERROR");
-
-    }
-
-}
 
 

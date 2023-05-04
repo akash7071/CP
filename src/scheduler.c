@@ -147,140 +147,14 @@ void setIdentifyEvent()
  }
 
 
-//void setUFEvent()
-//{
-// CORE_DECLARE_IRQ_STATE;
-// CORE_ENTER_CRITICAL();
-// sl_bt_external_signal(UF_EVENT);
-//
-// CORE_EXIT_CRITICAL();
-//
-//
-//}
-//
-//
-//void setCOMP1Event()
-//{
-//  CORE_DECLARE_IRQ_STATE;
-//  CORE_ENTER_CRITICAL();
-//  sl_bt_external_signal(COMP1_EVENT);
-//
-//  CORE_EXIT_CRITICAL();
-//}
-//
-//
-//void setI2CCompleteEvent()
-//{
-//  CORE_DECLARE_IRQ_STATE;
-//  CORE_ENTER_CRITICAL();
-//  sl_bt_external_signal(I2C_COMPLETE_EVENT);
-//
-//  CORE_EXIT_CRITICAL();
-//}
-
-
-//void setSchedulerEvent()
-//{
-//  if(event==IDLE)
-//    {
-//
-//    }
-//}
-/**************************************************************************//**
- * Function to read the events log and return an active event through priority
- * and clear the returned event
- *****************************************************************************/
-//eventEnum lastEvent1 =IDLE_EVENT;
-//eventEnum lastEvent2 =IDLE_EVENT;
-//
-//uint8_t getEvent()
-//{
-//
-////  uint8_t eventToReturn; // DOS
-//
-//  // #########################
-//  // This code is broken, see fixed code below
-//  // #########################
-//
-////  if((eventLog & UF_EVENT) && (lastEvent1!=COMP0_UF))
-////    {
-////      CORE_DECLARE_IRQ_STATE;
-////      CORE_ENTER_CRITICAL();
-////      eventLog &= ~(1 << (UF_EVENT-1));
-////      CORE_EXIT_CRITICAL();
-//////      nextEvent=2;
-////      lastEvent1=COMP0_UF;
-////      return COMP0_UF;
-////    }
-////
-////  else if((eventLog & COMP1_EVENT))// && (lastEvent2!=COMP1_UF))
-////    {
-////       CORE_DECLARE_IRQ_STATE;
-////       CORE_ENTER_CRITICAL();
-////       eventLog &= ~(1 << (COMP1_EVENT-1));
-////       CORE_EXIT_CRITICAL();
-////       lastEvent2=COMP1_UF;
-////
-//////       nextEvent=3;
-////
-////       return COMP1_UF;
-////     }
-////
-////  else if((eventLog & I2C_COMPLETE_EVENT))
-////    {
-////      CORE_DECLARE_IRQ_STATE;
-////      CORE_ENTER_CRITICAL();
-////      eventLog &= ~(1 << (I2C_COMPLETE_EVENT-1));
-////      CORE_EXIT_CRITICAL();
-////
-////      eventCompleted++;
-////      if(eventCompleted%2==0)
-////        {
-////          lastEvent1=I2C_TRANSFER_COMPLETE;
-////          lastEvent2=I2C_TRANSFER_COMPLETE;
-////        }
-////      else
-////        {
-////          lastEvent2=I2C_TRANSFER_COMPLETE;
-////        }
-////
-////
-////
-//////      nextEvent=4;
-////
-////
-////
-////      return I2C_TRANSFER_COMPLETE;
-////    }
-////
-////  return 0;
-//
-////  if (eventLog & UF_EVENT) {
-////      eventToReturn  = UF_EVENT;  // event to return
-////      eventLog      ^= UF_EVENT;  // clear the event in our private data structure
-////  }
-////  else if (eventLog & COMP1_EVENT) {
-////      eventToReturn  = COMP1_EVENT;  // event to return
-////      eventLog      ^= COMP1_EVENT;  // clear the event in our private data structure
-////  }
-////  else if (eventLog & I2C_COMPLETE_EVENT) {
-////      eventToReturn  = I2C_COMPLETE_EVENT;  // event to return
-////      eventLog      ^= I2C_COMPLETE_EVENT;  // clear the event in our private data structure
-////  }
-////
-////  return (eventToReturn);
-//
-//
-//} // getEvent()
-
 
 
 void sendPayrollIndication()
 {
-  gpioLed1SetOff();
+  //gpioLed1SetOff();
   uint8_t payRollID=0x05;
   sl_status_t sc = sl_bt_gatt_server_write_attribute_value(
-      gattdb_temperature_measurement, // handle from gatt_db.h
+      gattdb_wages, // handle from gatt_db.h
     0,                              // offset
     sizeof(payRollID), // length
     &payRollID);    // pointer to buffer where data is
@@ -292,7 +166,7 @@ void sendPayrollIndication()
       && ble_data2->indication_in_flight==0 && ble_data2->ok_to_send_htm_indications)
     {
       sc = sl_bt_gatt_server_send_indication(ble_data2->connectionHandle,
-                                             gattdb_temperature_measurement,
+                                                   gattdb_wages,
                                                    sizeof(payRollID),
                                                    &payRollID);
       ble_data2->indication_in_flight=1;
@@ -307,7 +181,7 @@ void sendManagerIndication()
 {
   uint8_t managerID=0x04;
   sl_status_t sc = sl_bt_gatt_server_write_attribute_value(
-    gattdb_temperature_measurement, // handle from gatt_db.h
+      gattdb_employee_id_s, // handle from gatt_db.h
     0,                              // offset
     sizeof(managerID), // length
     &managerID);    // pointer to buffer where data is
@@ -319,7 +193,7 @@ void sendManagerIndication()
       && ble_data2->indication_in_flight==0 && ble_data2->ok_to_send_htm_indications)
     {
       sc = sl_bt_gatt_server_send_indication(ble_data2->connectionHandle,
-                                             gattdb_temperature_measurement,
+                                             gattdb_employee_id_s,
                                                    sizeof(managerID),
                                                    &managerID);
       ble_data2->indication_in_flight=1;
@@ -333,7 +207,7 @@ void sendEmployeeIndication(uint8_t fingerID)
 {
 
     sl_status_t sc = sl_bt_gatt_server_write_attribute_value(
-    gattdb_temperature_measurement, // handle from gatt_db.h
+    gattdb_employee_id_s, // handle from gatt_db.h
     0,                              // offset
     sizeof(fingerID), // length
     &fingerID);    // pointer to buffer where data is
@@ -345,7 +219,7 @@ void sendEmployeeIndication(uint8_t fingerID)
       && ble_data2->indication_in_flight==0 && ble_data2->ok_to_send_htm_indications)
     {
       sc = sl_bt_gatt_server_send_indication(ble_data2->connectionHandle,
-                                             gattdb_temperature_measurement,
+                                             gattdb_employee_id_s,
                                                    sizeof(fingerID),
                                                    &fingerID);
       ble_data2->indication_in_flight=1;
@@ -355,116 +229,117 @@ void sendEmployeeIndication(uint8_t fingerID)
     }
 }
 uint8_t headcount=0;
-void payRollDisplay()
-{
 
-  headcount=0;
-  size_t value_len_s =0;
-  uint8_t tempEmployeeID[3]={0,0,0};
-  sl_status_t sc = sl_bt_gatt_server_read_attribute_value(gattdb_wages,
-                                                          0,
-                                                          3,
-                                                          &value_len_s,
-                                                          &tempEmployeeID[0]);
-  if (sc != SL_STATUS_OK)
-     {
-        gpioLed0SetOff();
-     }
-  employee_report_table[0].Payroll=tempEmployeeID[0];
-  employee_report_table[1].Payroll=tempEmployeeID[1];
-  employee_report_table[2].Payroll=tempEmployeeID[2];
+//void payRollDisplay()
+//{
+//
+//  headcount=0;
+//  size_t value_len_s =0;
+//  uint8_t tempEmployeeID[3]={0,0,0};
+//  sl_status_t sc = sl_bt_gatt_server_read_attribute_value(gattdb_wages,
+//                                                          0,
+//                                                          3,
+//                                                          &value_len_s,
+//                                                          &tempEmployeeID[0]);
+//  if (sc != SL_STATUS_OK)
+//     {
+//        gpioLed0SetOff();
+//     }
+//  employee_report_table[0].Payroll=tempEmployeeID[0];
+//  employee_report_table[1].Payroll=tempEmployeeID[1];
+//  employee_report_table[2].Payroll=tempEmployeeID[2];
+//
+//
+//
+//  displayPrintf(DISPLAY_ROW_NAME, "Attendance");
+//  displayPrintf(DISPLAY_ROW_BTADDR, "Monitoring");
+//  displayPrintf(DISPLAY_ROW_3, "Manager Access",0);// change row
+//  displayPrintf(DISPLAY_ROW_4, "Headcount = %d", headcount);
+//
+//  displayPrintf(DISPLAY_ROW_6, "EMPID ATTENDANCE PAY");
+//  displayPrintf(DISPLAY_ROW_7,  "----- ---------- ---");
+//  displayPrintf(DISPLAY_ROW_8,  " %d       %s    $%d", employee_report_table[0].employee_id, employee_report_table[0].attendance_status, employee_report_table[0].Payroll*WAGES);
+//  displayPrintf(DISPLAY_ROW_9,  " %d       %s    $%d", employee_report_table[1].employee_id, employee_report_table[1].attendance_status, employee_report_table[1].Payroll*WAGES);
+//  displayPrintf(DISPLAY_ROW_10, " %d       %s    $%d", employee_report_table[2].employee_id, employee_report_table[2].attendance_status, employee_report_table[2].Payroll*WAGES);
+//  //displayPrintf(DISPLAY_ROW_ASSIGNMENT, "Client");
+//}
 
-
-
-  displayPrintf(DISPLAY_ROW_NAME, "Attendance");
-  displayPrintf(DISPLAY_ROW_BTADDR, "Monitoring");
-  displayPrintf(DISPLAY_ROW_3, "Manager Access",0);// change row
-  displayPrintf(DISPLAY_ROW_4, "Headcount = %d", headcount);
-
-  displayPrintf(DISPLAY_ROW_6, "EMPID ATTENDANCE PAY");
-  displayPrintf(DISPLAY_ROW_7,  "----- ---------- ---");
-  displayPrintf(DISPLAY_ROW_8,  " %d       %s    $%d", employee_report_table[0].employee_id, employee_report_table[0].attendance_status, employee_report_table[0].Payroll*WAGES);
-  displayPrintf(DISPLAY_ROW_9,  " %d       %s    $%d", employee_report_table[1].employee_id, employee_report_table[1].attendance_status, employee_report_table[1].Payroll*WAGES);
-  displayPrintf(DISPLAY_ROW_10, " %d       %s    $%d", employee_report_table[2].employee_id, employee_report_table[2].attendance_status, employee_report_table[2].Payroll*WAGES);
-  //displayPrintf(DISPLAY_ROW_ASSIGNMENT, "Client");
-}
-
-
-
-void employeeDataDisplay()
-{
-  sl_udelay_wait(1000000);
-  sl_udelay_wait(1000000);
-  sl_udelay_wait(1000000);
-  sl_udelay_wait(1000000);
-  sl_udelay_wait(1000000);
-  sl_udelay_wait(1000000);
-  sl_udelay_wait(1000000);
-  sl_udelay_wait(1000000);
-
-
-  size_t value_len_s =0;
-  uint8_t tempEmployeeID[3];
-  sl_status_t sc = sl_bt_gatt_server_read_attribute_value(gattdb_attendance_data_c,
-                                                          0,
-                                                          3,
-                                                          &value_len_s,
-                                                          &tempEmployeeID[0]);
-  sendManagerIndication();
-  sl_udelay_wait(1000000);
-  sl_udelay_wait(1000000);
-  sl_udelay_wait(1000000);
-  sl_udelay_wait(1000000);
-
-  sc = sl_bt_gatt_server_read_attribute_value(gattdb_attendance_data_c,
-                                                           0,
-                                                           3,
-                                                           &value_len_s,
-                                                           &tempEmployeeID[0]);
-  if (sc != SL_STATUS_OK)
-   {
-      gpioLed0SetOff();
-   }
-
-  employee_report_table[0].status=tempEmployeeID[0];
-  employee_report_table[1].status=tempEmployeeID[1];
-  employee_report_table[2].status=tempEmployeeID[2];
-  displayPrintf(DISPLAY_ROW_2, "%d %d %d",tempEmployeeID[0],tempEmployeeID[1],tempEmployeeID[2]);// change row
-
-  for(int i=0; i<3 ;i++)
-    {
-      if(employee_report_table[i].status == 2)
-        {
-          memset(&employee_report_table[i].attendance_status[0], 0, 11);
-          strcpy(employee_report_table[i].attendance_status, "Out");
-        }
-      else if(employee_report_table[i].status == 1)
-        {
-          memset(&employee_report_table[i].attendance_status[0], 0, 11);
-          strcpy(employee_report_table[i].attendance_status, "Ins");
-          headcount++;
-        }
-      else
-        {
-          memset(&employee_report_table[i].attendance_status[0], 0, 11);
-          strcpy(employee_report_table[i].attendance_status, "Abs");
-        }
-  }
-
-
-  displayPrintf(DISPLAY_ROW_NAME, "Attendance");
-  displayPrintf(DISPLAY_ROW_BTADDR, "Monitoring");
-  displayPrintf(DISPLAY_ROW_3, "Manager Access",0);// change row
-  displayPrintf(DISPLAY_ROW_4, "Headcount = %d", headcount);
-
-  displayPrintf(DISPLAY_ROW_6,  "EMPID ATTENDANCE    ");
-  displayPrintf(DISPLAY_ROW_7,  "----- ---------- ---");
-  displayPrintf(DISPLAY_ROW_8,  " %d       %s       ", employee_report_table[0].employee_id, employee_report_table[0].attendance_status);
-  displayPrintf(DISPLAY_ROW_9,  " %d       %s       ", employee_report_table[1].employee_id, employee_report_table[1].attendance_status);
-  displayPrintf(DISPLAY_ROW_10, " %d       %s       ", employee_report_table[2].employee_id, employee_report_table[2].attendance_status);
-  displayPrintf(DISPLAY_ROW_ASSIGNMENT, "Server");
-}
-//uint8_t inPayroll=0;
+//
+//
+//void employeeDataDisplay()
+//{
+//  sl_udelay_wait(1000000);
+//  sl_udelay_wait(1000000);
+//  sl_udelay_wait(1000000);
+//  sl_udelay_wait(1000000);
+//  sl_udelay_wait(1000000);
+//  sl_udelay_wait(1000000);
+//  sl_udelay_wait(1000000);
+//  sl_udelay_wait(1000000);
+//
+//
+//  size_t value_len_s =0;
+//  uint8_t tempEmployeeID[3];
+//  sl_status_t sc = sl_bt_gatt_server_read_attribute_value(gattdb_attendance_data_c,
+//                                                          0,
+//                                                          3,
+//                                                          &value_len_s,
+//                                                          &tempEmployeeID[0]);
+//  sendManagerIndication();
+//  sl_udelay_wait(1000000);
+//  sl_udelay_wait(1000000);
+//  sl_udelay_wait(1000000);
+//  sl_udelay_wait(1000000);
+//
+//  sc = sl_bt_gatt_server_read_attribute_value(gattdb_attendance_data_c,
+//                                                           0,
+//                                                           3,
+//                                                           &value_len_s,
+//                                                           &tempEmployeeID[0]);
+//  if (sc != SL_STATUS_OK)
+//   {
+//      gpioLed0SetOff();
+//   }
+//
+//  employee_report_table[0].status=tempEmployeeID[0];
+//  employee_report_table[1].status=tempEmployeeID[1];
+//  employee_report_table[2].status=tempEmployeeID[2];
+//  displayPrintf(DISPLAY_ROW_2, "%d %d %d",tempEmployeeID[0],tempEmployeeID[1],tempEmployeeID[2]);// change row
+//
+//  for(int i=0; i<3 ;i++)
+//    {
+//      if(employee_report_table[i].status == 2)
+//        {
+//          memset(&employee_report_table[i].attendance_status[0], 0, 11);
+//          strcpy(employee_report_table[i].attendance_status, "Out");
+//        }
+//      else if(employee_report_table[i].status == 1)
+//        {
+//          memset(&employee_report_table[i].attendance_status[0], 0, 11);
+//          strcpy(employee_report_table[i].attendance_status, "Ins");
+//          headcount++;
+//        }
+//      else
+//        {
+//          memset(&employee_report_table[i].attendance_status[0], 0, 11);
+//          strcpy(employee_report_table[i].attendance_status, "Abs");
+//        }
+//  }
+//
+//
+//  displayPrintf(DISPLAY_ROW_NAME, "Attendance");
+//  displayPrintf(DISPLAY_ROW_BTADDR, "Monitoring");
+//  displayPrintf(DISPLAY_ROW_3, "Manager Access",0);// change row
+//  displayPrintf(DISPLAY_ROW_4, "Headcount = %d", headcount);
+//
+//  displayPrintf(DISPLAY_ROW_6,  "EMPID ATTENDANCE    ");
+//  displayPrintf(DISPLAY_ROW_7,  "----- ---------- ---");
+//  displayPrintf(DISPLAY_ROW_8,  " %d       %s       ", employee_report_table[0].employee_id, employee_report_table[0].attendance_status);
+//  displayPrintf(DISPLAY_ROW_9,  " %d       %s       ", employee_report_table[1].employee_id, employee_report_table[1].attendance_status);
+//  displayPrintf(DISPLAY_ROW_10, " %d       %s       ", employee_report_table[2].employee_id, employee_report_table[2].attendance_status);
+//  displayPrintf(DISPLAY_ROW_ASSIGNMENT, "Server");
+//}
+////uint8_t inPayroll=0;
 
 
 void stateMachine(sl_bt_msg_t *evt)
@@ -488,31 +363,6 @@ void stateMachine(sl_bt_msg_t *evt)
                   capturePrint();                 //start capturing finger prints
                   displayPrintf(DISPLAY_ROW_3, "Ready",0);
                   nextState=WAIT_FOR_FINGERPRINT;
-                  if(!GPIO_PinInGet(5,6))
-                  {
-                  if(ble_data2->managerLoggedIn)
-                    {
-                      ble_data2 -> payroll =1;
-                      //displayPrintf(2,"in here", 0);
-              //                      employee_report_table[0].Payroll=evt->data.evt_gatt_server_attribute_value.value.data[0];
-              //                      employee_report_table[1].Payroll=evt->data.evt_gatt_server_attribute_value.value.data[1];
-              //                      employee_report_table[2].Payroll=evt->data.evt_gatt_server_attribute_value.value.data[2];
-
-
-
-              //          displayPrintf(DISPLAY_ROW_NAME, "Attendance");
-              //          displayPrintf(DISPLAY_ROW_BTADDR, "Monitoring");
-              //          displayPrintf(DISPLAY_ROW_3, "Manager Access",0);// change row
-              //          //displayPrintf(DISPLAY_ROW_4, "Headcount = %d", headcount);
-              //
-                      displayPrintf(DISPLAY_ROW_6,  "EMPID ATTENDANCE    ");
-                      displayPrintf(DISPLAY_ROW_7,  "----- ---------- ---");
-                      displayPrintf(DISPLAY_ROW_8,  " %d       %s    %d ", employee_report_table[0].employee_id, employee_report_table[0].attendance_status,employee_report_table[0].Payroll);
-                      displayPrintf(DISPLAY_ROW_9,  " %d       %s    %d ", employee_report_table[1].employee_id, employee_report_table[1].attendance_status,employee_report_table[1].Payroll);
-                      displayPrintf(DISPLAY_ROW_10, " %d       %s    %d ", employee_report_table[2].employee_id, employee_report_table[2].attendance_status,employee_report_table[2].Payroll);
-              //          displayPrintf(DISPLAY_ROW_ASSIGNMENT, "Server");
-                    }
-                                    }
 
               break;
 
@@ -521,48 +371,16 @@ void stateMachine(sl_bt_msg_t *evt)
 
               if(event == 1)
                 {
-                  //gpioLed0SetOn();
+
                   identifyFinger();
                   nextState=IDENTIFY_FINGERPRINT;
 
                 }
-//              else if((event == 8) || ( event == 16))
-//                {
-//                  displayPrintf(2,"event 8 16", 0);
-
-              if(!GPIO_PinInGet(5,6))
-                  {
-
-                  if(ble_data2->managerLoggedIn)
-                    {ble_data2 -> payroll =1;
-                      //displayPrintf(2,"in here", 0);
-              //                      employee_report_table[0].Payroll=evt->data.evt_gatt_server_attribute_value.value.data[0];
-              //                      employee_report_table[1].Payroll=evt->data.evt_gatt_server_attribute_value.value.data[1];
-              //                      employee_report_table[2].Payroll=evt->data.evt_gatt_server_attribute_value.value.data[2];
-
-
-
-              //          displayPrintf(DISPLAY_ROW_NAME, "Attendance");
-              //          displayPrintf(DISPLAY_ROW_BTADDR, "Monitoring");
-              //          displayPrintf(DISPLAY_ROW_3, "Manager Access",0);// change row
-              //          //displayPrintf(DISPLAY_ROW_4, "Headcount = %d", headcount);
-              //
-                      displayPrintf(DISPLAY_ROW_6,  "EMPID ATTENDANCE    ");
-                      displayPrintf(DISPLAY_ROW_7,  "----- ---------- ---");
-                      displayPrintf(DISPLAY_ROW_8,  " %d       %s    %d ", employee_report_table[0].employee_id, employee_report_table[0].attendance_status,employee_report_table[0].Payroll);
-                      displayPrintf(DISPLAY_ROW_9,  " %d       %s    %d ", employee_report_table[1].employee_id, employee_report_table[1].attendance_status,employee_report_table[1].Payroll);
-                      displayPrintf(DISPLAY_ROW_10, " %d       %s    %d ", employee_report_table[2].employee_id, employee_report_table[2].attendance_status,employee_report_table[2].Payroll);
-              //          displayPrintf(DISPLAY_ROW_ASSIGNMENT, "Server");
-                    }
-                  }
-
-
-
               break;
 
 
             case IDENTIFY_FINGERPRINT:
-              //manager access
+
               if( (event == 2) && (fingerID==0x00))
                 {
 
@@ -616,31 +434,7 @@ void stateMachine(sl_bt_msg_t *evt)
                   displayPrintf(DISPLAY_ROW_4, "Try Again",0);
                   nextState=IDLE;
                 }
-              if(!GPIO_PinInGet(5,6))
-                                {
 
-                                if(ble_data2->managerLoggedIn)
-                                  {ble_data2 -> payroll =1;
-                                    //displayPrintf(2,"in here", 0);
-                            //                      employee_report_table[0].Payroll=evt->data.evt_gatt_server_attribute_value.value.data[0];
-                            //                      employee_report_table[1].Payroll=evt->data.evt_gatt_server_attribute_value.value.data[1];
-                            //                      employee_report_table[2].Payroll=evt->data.evt_gatt_server_attribute_value.value.data[2];
-
-
-
-                            //          displayPrintf(DISPLAY_ROW_NAME, "Attendance");
-                            //          displayPrintf(DISPLAY_ROW_BTADDR, "Monitoring");
-                            //          displayPrintf(DISPLAY_ROW_3, "Manager Access",0);// change row
-                            //          //displayPrintf(DISPLAY_ROW_4, "Headcount = %d", headcount);
-                            //
-                                    displayPrintf(DISPLAY_ROW_6,  "EMPID ATTENDANCE    ");
-                                    displayPrintf(DISPLAY_ROW_7,  "----- ---------- ---");
-                                    displayPrintf(DISPLAY_ROW_8,  " %d       %s    %d ", employee_report_table[0].employee_id, employee_report_table[0].attendance_status,employee_report_table[0].Payroll);
-                                    displayPrintf(DISPLAY_ROW_9,  " %d       %s    %d ", employee_report_table[1].employee_id, employee_report_table[1].attendance_status,employee_report_table[1].Payroll);
-                                    displayPrintf(DISPLAY_ROW_10, " %d       %s    %d ", employee_report_table[2].employee_id, employee_report_table[2].attendance_status,employee_report_table[2].Payroll);
-                            //          displayPrintf(DISPLAY_ROW_ASSIGNMENT, "Server");
-                                  }
-                                }
               break;
 
 
@@ -654,7 +448,7 @@ void stateMachine(sl_bt_msg_t *evt)
 
 
             case LOG_ATTENDANCE:
-              //if(event==16)
+
                 {
                   displayPrintf(DISPLAY_ROW_4, "",0);//print current state
                   displayPrintf(DISPLAY_ROW_3, "Employee %d Logged",fingerID);
