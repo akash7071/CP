@@ -59,6 +59,7 @@
 #include "sl_bluetooth.h"
 #include "gatt_db.h"
 #include <em_usart.h>
+#include "src/uart.h"
 
 
 
@@ -105,8 +106,7 @@ uint32_t intTime=0;   //extern variable init
 
 
 
- uint8_t receiveAck=0;
- uint8_t fingerID=0;
+
 
 
 
@@ -195,15 +195,6 @@ sl_power_manager_on_isr_exit_t app_sleep_on_isr_exit(void)
 #endif // defined(SL_CATALOG_POWER_MANAGER_PRESENT)
 
 
-// Structure Of Cmd and Ack Packets
-typedef struct {
-  uint8_t  Head1;
-  uint8_t  Head2;
-  uint16_t  wDevId;
-  uint32_t   nParam;
-  uint16_t  wCmd;// or nAck
-  uint16_t  wChkSum;
-} SB_OEM_PKT;
 
 //int comm_send(uint8_t* pbuf, int nsize, int ntimeout)
 //{
@@ -220,16 +211,6 @@ typedef struct {
 //  return temp;
 //}
 
-uint16_t oemp_CalcChkSumOfCmdAckPkt( SB_OEM_PKT* pPkt )
-{
-  uint16_t wChkSum = 0;
-  uint8_t* pBuf = (uint16_t*)pPkt;
-  unsigned int i;
-
-  for(i=0;i<(sizeof(SB_OEM_PKT)-2);i++)
-    wChkSum += pBuf[i];
-  return wChkSum;
-}
 
 
 //void sendOpenCommand()
@@ -263,11 +244,6 @@ uint16_t oemp_CalcChkSumOfCmdAckPkt( SB_OEM_PKT* pPkt )
 #include "sl_udelay.h"
 //#include "sl_iostream_usart_vcom_config.h"
 
-#define GT521F52_UART USART0
-#define GT521F52_TX_PORT gpioPortA
-#define GT521F52_TX_PIN 0       //default 0
-#define GT521F52_RX_PORT gpioPortA
-#define GT521F52_RX_PIN 3       //default 1
 
 
 
@@ -277,63 +253,32 @@ uint16_t oemp_CalcChkSumOfCmdAckPkt( SB_OEM_PKT* pPkt )
 
 
 
-#include "em_device.h"
-#include "em_chip.h"
-#include "em_cmu.h"
-#include "em_gpio.h"
-#include "em_letimer.h"
-
-#define UART_RX_PORT gpioPortA
-#define UART_RX_PIN  3
-
-#define BAUDRATE     9600
-
-#define TIMER_FREQ   1000000
-#define BIT_TIME_US  (1000000 / BAUDRATE)
 
 
 
-void init_leUART()
-{
-  GPIO_PinModeSet(UART_RX_PORT, UART_RX_PIN, gpioModeInput, 0);    // RX
 
-
-  // Configure LETIMER for UART bit-banging
-//  CMU_ClockEnable(cmuClock_LETIMER0, true);
-//  LETIMER_Init_TypeDef letimerInit = LETIMER_INIT_DEFAULT;
-//  letimerInit.repMode = letimerRepeatFree;
-//  LETIMER_Init(LETIMER0, &letimerInit);
-//  uint32_t letimerComp = BIT_TIME_US * 2; // Trigger at middle of each bit
-//  LETIMER_CompareSet(LETIMER0, 0, letimerComp);
-//  LETIMER_IntEnable(LETIMER0, LETIMER_IEN_COMP0);
-//  NVIC_EnableIRQ(LETIMER0_IRQn);
-
-  // Enable global interrupts
-  __enable_irq();
-}
-
-uint8_t uartRx(void)
-{
-  // Wait for start bit
-  while (GPIO_PinInGet(UART_RX_PORT, UART_RX_PIN));
-
-  // Data bits
-  uint8_t data = 0;
-  for (int i = 0; i < 8; i++) {
-    // Wait for the middle of the bit
-    while (!(LETIMER_IntGet(LETIMER0) & LETIMER_IF_COMP0));
-    LETIMER_IntClear(LETIMER0, LETIMER_IF_COMP0);
-
-    // Read the data bit
-    data |= GPIO_PinInGet(UART_RX_PORT, UART_RX_PIN) << i;
-  }
-
-  // Stop bit
-  while (!(LETIMER_IntGet(LETIMER0) & LETIMER_IF_COMP0));
-  LETIMER_IntClear(LETIMER0, LETIMER_IF_COMP0);
-
-  return data;
-}
+//uint8_t uartRx(void)
+//{
+//  // Wait for start bit
+//  while (GPIO_PinInGet(UART_RX_PORT, UART_RX_PIN));
+//
+//  // Data bits
+//  uint8_t data = 0;
+//  for (int i = 0; i < 8; i++) {
+//    // Wait for the middle of the bit
+//    while (!(LETIMER_IntGet(LETIMER0) & LETIMER_IF_COMP0));
+//    LETIMER_IntClear(LETIMER0, LETIMER_IF_COMP0);
+//
+//    // Read the data bit
+//    data |= GPIO_PinInGet(UART_RX_PORT, UART_RX_PIN) << i;
+//  }
+//
+//  // Stop bit
+//  while (!(LETIMER_IntGet(LETIMER0) & LETIMER_IF_COMP0));
+//  LETIMER_IntClear(LETIMER0, LETIMER_IF_COMP0);
+//
+//  return data;
+//}
 
 
 
@@ -350,62 +295,19 @@ uint8_t uartRx(void)
 
 
 
-void init_uart(void)
-
-
-{
-
-    CMU_ClockEnable(cmuClock_HFPER, true);
-    CMU_ClockEnable(cmuClock_USART0, true);
-    CMU_ClockEnable(cmuClock_GPIO, true);
-
-    USART_InitAsync_TypeDef initAsync = USART_INITASYNC_DEFAULT;
-    initAsync.baudrate = 9600;
-    USART_InitAsync(USART0, &initAsync);
-
-
-
-
-    USART0->ROUTEPEN |= USART_ROUTEPEN_RXPEN | USART_ROUTEPEN_TXPEN;
-//    USART0->ROUTELOC0 = (USART0->ROUTELOC0
-//                         & ~(_USART_ROUTELOC0_TXLOC_MASK
-//                             | _USART_ROUTELOC0_RXLOC_MASK))
-//                        | (GT521F52_TX_PIN << _USART_ROUTELOC0_TXLOC_SHIFT)
-//                        | (GT521F52_RX_PIN << _USART_ROUTELOC0_RXLOC_SHIFT);
-
-    USART0->ROUTELOC0 =0x00<<_USART_ROUTELOC0_TXLOC_SHIFT | 0x02<<_USART_ROUTELOC0_RXLOC_SHIFT;
-    //USART0->ROUTELOC0 =0x03<<_USART_ROUTELOC0_TXLOC_SHIFT;
-
-    GPIO_PinModeSet((GPIO_Port_TypeDef)AF_USART0_TX_PORT(GT521F52_TX_PIN), AF_USART0_TX_PIN(GT521F52_TX_PIN), gpioModePushPull, 1);
-    GPIO_PinModeSet((GPIO_Port_TypeDef)AF_USART0_RX_PORT(GT521F52_RX_PIN), AF_USART0_RX_PIN(GT521F52_RX_PIN), gpioModeInput, 0);
-    //GPIO_PinModeSet((GPIO_Port_TypeDef)AF_USART0_RX_PORT(GT521F52_RX_PIN), AF_USART0_RX_PIN(GT521F52_RX_PIN), gpioModeInputPull, 0);
-
-    GPIO_PinModeSet(UART_RX_PORT, UART_RX_PIN, gpioModeInput, 0);    // RX
-}
-
-uint8_t send_cmd(uint8_t* cmd, uint32_t len)
-{
-  uint8_t temp;
-    for (uint32_t i = 0; i < len; i++) {
-        USART_Tx(USART0, cmd[i]);
-        //while (!(USART0->STATUS & USART_STATUS_TXC));
-        temp++;
-    }
-    return temp;
-}
 
 
 
 
 // Size of the buffer for received data
-#define BUFLEN  80
+
 #define LED0_port  5 // change to correct ports and pins
 #define LED0_pin   4
 #define LED1_port  5
 #define LED1_pin   5
 
 // Receive data buffer
-uint8_t buffer[BUFLEN];
+
 
 // Current position ins buffer
 uint32_t inpos = 0;
@@ -413,21 +315,21 @@ uint32_t outpos = 0;
 
 // True while receiving data (waiting for CR or BUFLEN characters)
 bool receive = true;
-
-uint8_t receive_ack(int len)
-{
-
-  for(int i=0;i<len;i++)
-    {
-      //buffer[i] = USART_RxDataGet(USART0);
-      buffer[i] = USART_Rx(USART0);
-    }
-
-  //gpioLed1SetOn();
-  USART0->CMD |= 1 <_USART_CMD_CLEARRX_SHIFT;
-  return buffer[8];
-
-}
+//
+//uint8_t receive_ack(int len)
+//{
+//
+//  for(int i=0;i<len;i++)
+//    {
+//      //buffer[i] = USART_RxDataGet(USART0);
+//      buffer[i] = USART_Rx(USART0);
+//    }
+//
+//  //gpioLed1SetOn();
+//  USART0->CMD |= 1 <_USART_CMD_CLEARRX_SHIFT;
+//  return buffer[8];
+//
+//}
 
 
 
@@ -438,118 +340,43 @@ uint8_t receive_ack(int len)
  * @brief
  *    The USART0 receive interrupt saves incoming characters.
  *****************************************************************************/
-void USART0_RX_IRQHandler(void)
-{
-
-  //GPIO_PinOutToggle(5,LED1_pin);
-  gpioLed1SetOn();
-  // Get the character just received
-  //for(int i=0;i<12;i++)
-    buffer[inpos] = USART_RxDataGet(USART0);
-    if(buffer[inpos]==0x30)
-      {
-        //gpioLed0SetOn();
-
-
-      }
-
-
-
-
-
-
-
-
-//   Exit loop on new line or buffer full
-  if ((buffer[inpos] != '\r') && (inpos < BUFLEN))
-    inpos++;
-  else
-    receive = false;   // Stop receiving on CR
-  if(inpos==12)
-    NVIC_DisableIRQ(USART0_RX_IRQn);
-
-}
-
-
-
-
-// Header Of Cmd and Ack Packets
-#define STX1        0x55  //Header1
-#define STX2        0xAA  //Header2
-#define PKT_ERR_START -500
-#define PKT_COMM_ERR  PKT_ERR_START+1
-#define PKT_HDR_ERR   PKT_ERR_START+2
-#define PKT_DEV_ID_ERR  PKT_ERR_START+3
-#define PKT_CHK_SUM_ERR PKT_ERR_START+4
-#define PKT_PARAM_ERR PKT_ERR_START+5
-#define SB_OEM_PKT_SIZE     12
-#define COMM_DEF_TIMEOUT 10000
-#define wDevID 0x0001
-uint32_t gCommTimeOut = COMM_DEF_TIMEOUT;
+//void USART0_RX_IRQHandler(void)
+//{
+//
+//  //GPIO_PinOutToggle(5,LED1_pin);
+//  gpioLed1SetOn();
+//  // Get the character just received
+//  //for(int i=0;i<12;i++)
+//    buffer[inpos] = USART_RxDataGet(USART0);
+//    if(buffer[inpos]==0x30)
+//      {
+//        //gpioLed0SetOn();
+//
+//
+//      }
+//
+//
+//
+//
+//
+//
+//
+//
+////   Exit loop on new line or buffer full
+//  if ((buffer[inpos] != '\r') && (inpos < BUFLEN))
+//    inpos++;
+//  else
+//    receive = false;   // Stop receiving on CR
+//  if(inpos==12)
+//    NVIC_DisableIRQ(USART0_RX_IRQn);
+//
+//}
 
 
 
-int oemp_SendCmdOrAck(uint32_t nParam, uint16_t wCmdOrAck )
-{
-  SB_OEM_PKT pkt;
-  int nSentBytes;
 
 
-  pkt.Head1 = (uint8_t)STX1;
-  pkt.Head2 = (uint8_t)STX2;
-  pkt.wDevId = wDevID;
-  pkt.wCmd = wCmdOrAck;
-  pkt.nParam = nParam;
-  pkt.wChkSum = oemp_CalcChkSumOfCmdAckPkt( &pkt );
 
-  //nSentBytes = comm_send( (uint8_t*)&pkt, SB_OEM_PKT_SIZE, gCommTimeOut );
-  nSentBytes = send_cmd((uint8_t*)&pkt, SB_OEM_PKT_SIZE);
-  if( nSentBytes != SB_OEM_PKT_SIZE )
-    return PKT_COMM_ERR;
-
-  return 0;
-}
-
-void cmosLED(bool state)
-{
-  USART0->CMD |= 1 <_USART_CMD_CLEARRX_SHIFT;
-  uint32_t paramLED = 0x00000000;
-  paramLED |= state;
-  oemp_SendCmdOrAck(paramLED, 0x0012);
-  receive_ack(12);
-  sl_udelay_wait(50000);
-}
-
-void fpInit()
-{
-  sl_udelay_wait(100000);
-
-
-  USART0->CMD |= 1 <_USART_CMD_CLEARRX_SHIFT;
-  oemp_SendCmdOrAck(0x00002580, 0x0004);  //{0x55, 0xAA, 0x01, 0x00, 0x80, 0x25, 0x00, 0x00, 0x04, 0x00, 0xA9, 0x01};
-  receive_ack(12);
-  sl_udelay_wait(42000);
-
-  USART0->CMD |= 1 <_USART_CMD_CLEARRX_SHIFT;
-  oemp_SendCmdOrAck(00000001, 0x0001); //uint8_t init_cmdb[] = {0x55, 0xAA,   0x01, 0x00,    0x01, 0x00, 0x00, 0x00,    0x01, 0x00,    0x02, 0x01};
-  receive_ack(42);
-  sl_udelay_wait(76000);
-
-
-  USART0->CMD |= 1 <_USART_CMD_CLEARRX_SHIFT;
-  oemp_SendCmdOrAck(0x00000000, 0x0006);//uint8_t init_cmdc[] = {0x55, 0xAA,   0x01, 0x00,  0x00, 0x00, 0x00, 0x00,   0x06, 0x00,   0x06, 0x01};
-  receive_ack(56);
-  sl_udelay_wait(100000);
-  sl_udelay_wait(100000);
-  sl_udelay_wait(100000);
-
-
-  cmosLED(1);
-//  receive_ack(12);
-  cmosLED(0);
-//  receive_ack(12);
-
-}
 
 
 
@@ -626,81 +453,6 @@ SL_WEAK void app_init(void)
     sl_power_manager_add_em_requirement(SL_POWER_MANAGER_EM2);
 
 } // app_init()
-
-void identifyFinger()
-{
-
-  USART0->CMD |= 1 <_USART_CMD_CLEARRX_SHIFT;
-  oemp_SendCmdOrAck(0x00000000, 0x0051);
-  //sl_udelay_wait(60000);
-
-
-  for(int i=0;i<12;i++)
-    {
-      //buffer[i] = USART_RxDataGet(USART0);
-      buffer[i] = USART_Rx(USART0);
-    }
-
-  //gpioLed1SetOn();
-  USART0->CMD |= 1 <_USART_CMD_CLEARRX_SHIFT;
-
-  if(buffer[8]==0x30)
-    {
-      fingerID=buffer[4];
-
-    }
-  else
-    {
-      fingerID=0xFF;
-    }
-
-
-  cmosLED(0);
-  setIdentifyEvent();
-
-}
-
-void capturePrint()
-{
-  uint8_t attempts;
-CAPTUREAGAIN:
-  attempts=0;
-  //turn on LED
-  cmosLED(1);
-
-  //get enroll count
-  USART0->CMD |= 1 <_USART_CMD_CLEARRX_SHIFT;
-  oemp_SendCmdOrAck(0x00000000, 0x0020);
-  receive_ack(12);
-  sl_udelay_wait(100000);
-
-  //capture prints
-  USART0->CMD |= 1 <_USART_CMD_CLEARRX_SHIFT;
-  oemp_SendCmdOrAck(0x00000000, 0x0060);
-  //sl_udelay_wait(60000);
-  receiveAck=receive_ack(12);
-  //sl_udelay_wait(10000);
-
-  //if no finger pressed, repeat above step
-
-  while( receiveAck!=0x30)
-    {
-      oemp_SendCmdOrAck(0x00000000, 0x0060);
-      //sl_udelay_wait(30000);
-      receiveAck=receive_ack(12);
-      attempts++;
-      if(attempts>15)
-        {
-
-          cmosLED(0);
-          goto CAPTUREAGAIN;
-        }
-    }
-  setCaptureEvent();
-
-
-
-}
 
 
 
